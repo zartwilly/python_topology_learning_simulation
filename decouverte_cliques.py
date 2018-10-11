@@ -879,6 +879,8 @@ def decouverte_cliques(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
                                                      matE.copy(), 
                                                      dico_ver, 
                                                      arguments_MAJ.copy())
+    return C, dico_cliq, liste_aretes_Ec,\
+            ordre_noeuds_traites, dico_sommets_par_cliqs
 #    return {0:[C, dico_cliq, E0, [], [], [], -11110,C]} # a DELETE
     print("Avant Correction liste_aretes_Ec = ", len(liste_aretes_Ec))#, "@@@@ C = ",C)
     som_cout_min = 0; 
