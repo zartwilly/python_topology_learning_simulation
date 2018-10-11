@@ -627,26 +627,62 @@ def is_cliques_coherente(noeud_u, tup_cu1_cu2, noeud_inter_cu1_cu2, dico_gamma_n
 ########## reecriture PARTITION FIN #################################
 
 ########## reecriture decouverte de cliques DEBUT ###############################
-def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE, dico_ver, arguments_MAJ):
+def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE, 
+                          dico_ver, arguments_MAJ):
     """
     algorithme de couverture en cliques.
+    
+    fonction qui determine le partitionnement en cliques de tous les sommets 
+    du graphe en une ou deux cliques.
+    
+    Parametres nommes : 
+    * dico_cliq -- un dictionnaire contenant les etats (0,1,2,3) de 
+                        chaque sommet
+    * dico_gamma_noeud -- dictionnaire contenant le voisinage de chaque sommet
+    * liste_aretes_Ec -- liste des aretes du graphe 
+    * matE -- matrice d'adjacence du graphe
+    * dico_ver -- dictionnaire contenant NE SERT A RIEN
+    * arguments_MAJ -- dictionnaire contenant les infos sur le reseau 
+                        energetique cad la correspondante entre aretes et 
+                        sommets, le seuil et les pertes par effetsjoules choisi
+                        sur les mesures, les mesures dans un dataframe, etc 
+        
+    Elle retourne :
+    * C -- la liste des cliques decouvertes dans le graphe
+    * dico_cliq -- un dictionnaire contenant les etats (0,1,2,3) de 
+                        chaque sommet
+    * liste_aretes_Ec -- liste des aretes du graphe a la fin de la 
+                                couverture. 
+                                Si elle est vide, le graphe est un line-graphe.
+    * ordre_noeuds_traites -- l'ordre dans lequel les sommets sont traites.
+    * dico_sommets_par_cliqs -- dictionnaire contenant les cliques couvrant 
+                                un sommet
+    
     """
     C = list();
     ordre_noeuds_traites = list();
+    dico_sommets_par_cliqs = dict();
+    
+    # initialisation du dictionnaire dico_sommets_par_cliqs
+    for sommet in dico_cliq.keys():
+        dico_sommets_par_cliqs[sommet] = list();
     
     ### while 
     while 0 in dico_cliq.values():
         
         l_sommets_tag02_gama, l_sommets_notTag02_NotGama = \
-                      sommet_tagge0_voisinage_clique(dico_cliq, liste_aretes_Ec, dico_gamma_noeud)
+                      sommet_tagge0_voisinage_clique(dico_cliq, 
+                                                     liste_aretes_Ec, 
+                                                     dico_gamma_noeud)
 #            print ("01 l_sommet_tag02_gama:",l_sommets_tag02_gama)
 #            print ("01 l_sommet_notTag02_NotGama: ",l_sommets_notTag02_NotGama)              
         if len(l_sommets_tag02_gama) == 0:   
         #if len(l_sommets_notTag02_NotGama) != 0:  +=====>>> FAUX  FAUX 
-            noeud_u = degre_minimum(dico_gamma_noeud, list(l_sommets_notTag02_NotGama), \
-                                      dico_cliq, code="0" ) # noeud de degre min dans l_sommet_notTag02_NotGama
+            noeud_u = degre_minimum(dico_gamma_noeud, 
+                                    list(l_sommets_notTag02_NotGama), 
+                                    dico_cliq, code="0")                        # noeud de degre min dans l_sommet_notTag02_NotGama
 #                print ("00 noeud_u :", noeud_u )
-            if noeud_u == None:
+            if noeud_u is None:
                 l_sommets_notTag02_NotGama = []
                 continue;
             ordre_noeuds_traites.append(noeud_u)
@@ -655,32 +691,34 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE, di
             gamma_u = dico_gamma_noeud[noeud_u][1]; gamma_u.add(noeud_u)
             #print ("01 noeud_u :", noeud_u ); #print ("01 gamma_u :", gamma_u)
             
-            Cu1, Cu2 = PARTITION(noeud_u, gamma_u, liste_aretes_Ec, dico_gamma_noeud, dico_cliq, matE, arguments_MAJ)
+            Cu1, Cu2 = PARTITION(noeud_u, gamma_u, liste_aretes_Ec, 
+                                 dico_gamma_noeud, dico_cliq, 
+                                 matE, arguments_MAJ)
             #print("01 noeud_u :", noeud_u ," PARTITION Cu1 = ", Cu1," Cu2 = ",Cu2,' gamma_u = ',gamma_u)
             
-            if Cu1 != None or Cu2 != None:
-                dico_cliq[noeud_u] = 1; dico_ver[noeud_u] = 1; 
+            if Cu1 is not None or Cu2 is not None:
+                dico_cliq[noeud_u] = 1; dico_ver[noeud_u] = 1;
                 #print("01 Cu1: ",Cu1," Cu2: ",Cu2)
                 C.append( Cu1 ) if set(Cu1) not in C and len(Cu1) != 0 else None
                 C.append( Cu2 ) if set(Cu2) not in C and len(Cu2) != 0 else None
-                liste_aretes_Ec = aretes_a_supprimer(liste_aretes_Ec, [list(Cu1), list(Cu2)] )
-                          
+                liste_aretes_Ec = aretes_a_supprimer(liste_aretes_Ec, 
+                                                     [list(Cu1), list(Cu2)] )
+            
                 # recalcul gamma de chaque noeud ===> gamma_graph
                 dico_gamma_noeud = fct_aux.gamma_noeud(matE, liste_aretes_Ec)
-                          
                 for z in gamma_u-{noeud_u}:
                     if len(dico_gamma_noeud[z][1]) == 0 and dico_cliq[z] != -1:
-                        dico_cliq[z] = 1; #print("noeud_u :", noeud_u ," z= ", z, "1")
-                    elif dico_cliq[z] == 0 : #or dico_cliq[z] == 2:
-                         dico_cliq[z] = 2; #print("noeud_u :", noeud_u ," z= ", z, "2")
+                        dico_cliq[z] = 1;                                       #print("noeud_u :", noeud_u ," z= ", z, "1")
+                    elif dico_cliq[z] == 0:                                    #or dico_cliq[z] == 2:
+                         dico_cliq[z] = 2;                                      #print("noeud_u :", noeud_u ," z= ", z, "2")
                     else:
-                         dico_cliq[z] = -1; #print("01 traitement_Erreur1 noeud=",z)
+                         dico_cliq[z] = -1;                                     #print("01 traitement_Erreur1 noeud=",z)
                                   
             else:
                 # il n'existe pas 2 partitions de U_gammaU
                 # Cu1 == None ou Cu2 == None
                 #print("01 il n'existe pas 2 partitions de U_gammaU noeud_1=", noeud_u, " a -1");
-                dico_cliq[noeud_u] = -1
+                dico_cliq[noeud_u] = -1;
           # fin if len(l_sommet_tag02_gama) == 0
         else:
 #                print("****C = ",C)
@@ -688,32 +726,38 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE, di
             while len(l_sommets_tag02_gama) != 0:
             #if len(l_sommets_tag02_gama) != 0:
                 
-                noeud_u = degre_minimum(dico_gamma_noeud, list(l_sommets_tag02_gama), dico_cliq, code="02") # noeud de degre min dans l_sommets_tag02_gama
-                if noeud_u == None:
+                noeud_u = degre_minimum(dico_gamma_noeud, 
+                                        list(l_sommets_tag02_gama), 
+                                        dico_cliq, code="02")                   # noeud de degre min dans l_sommets_tag02_gama
+                if noeud_u is None:
                     l_sommets_tag02_gama = []; continue;
                 ordre_noeuds_traites.append(noeud_u)
                     
-                l_sommets_tag02_gama.remove( noeud_u )
-                gamma_u_comp = set(fct_aux.gamma(liste_aretes_Ec, noeud_u))
+                l_sommets_tag02_gama.remove(noeud_u)
+                
                 gamma_u = dico_gamma_noeud[noeud_u][1]
+                #gamma_u_comp = set(fct_aux.gamma(liste_aretes_Ec, noeud_u))
                 #print("compare gamma_u-u_comp ", gamma_u == gamma_u_comp) # A EFFACER
                 gamma_u.add(noeud_u)
-                Cu = set(); Cu = gamma_u.copy()
+                Cu = set(); Cu = gamma_u.copy();
 #                    print("02 noeud_u: ",noeud_u, " gamma_u: ", gamma_u," Cu: ",Cu)
                 
                 if len(Cu) == 3:
-                    Cu, Cu2,dico_ver[noeud_u] = MAJ(noeud_u, [set(Cu), set([])], dico_ver[noeud_u], matE,\
-                                                  arguments_MAJ)
+                    Cu, Cu2,dico_ver[noeud_u] = MAJ(noeud_u, 
+                                                    [set(Cu), set([])],
+                                                    dico_ver[noeud_u], matE,
+                                                    arguments_MAJ)
 #                        print("ICI noeud_u: ",noeud_u, "Cu: ",Cu, " Cu2: ", Cu2)
                 #print("sansPArtition noeud_u: ",noeud_u, "Cu: ",Cu, " gamma_u = ", gamma_u)
 
-                dico_cliq[noeud_u] = 1; dico_ver[noeud_u] = 1
+                dico_cliq[noeud_u] = 1; dico_ver[noeud_u] = 1;
                 if len(Cu) != 1 and Cu not in C:
                     C.append( Cu );
 #                        print("ICI noeud_u: ",noeud_u, " add clique ",Cu)
                     
                 #print(" -----1 liste_aretes_Ec: ", len(liste_aretes_Ec), " Cu: ",Cu )
-                liste_aretes_Ec = aretes_a_supprimer(liste_aretes_Ec, [list(Cu)] )
+                liste_aretes_Ec = aretes_a_supprimer(liste_aretes_Ec, 
+                                                     [list(Cu)])
                 #print(" -----2 liste_aretes_Ec: ", len(liste_aretes_Ec) )
                 # recalcul gamma de chaque noeud ===> gamma_graph
                 dico_gamma_noeud = fct_aux.gamma_noeud(matE, liste_aretes_Ec)
@@ -728,16 +772,27 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE, di
                         dico_cliq[z] = -1
                         #print("02 traitement_Erreur z =", z)
                           
-                l_sommets_tag02_gama = sommet_tagge02_voisinage_clique(dico_cliq, liste_aretes_Ec, dico_gamma_noeud)
+                l_sommets_tag02_gama = sommet_tagge02_voisinage_clique(
+                                        dico_cliq, liste_aretes_Ec, 
+                                        dico_gamma_noeud)
                
     ### while fin
-    return C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites;
-    pass
+    
+    ## determiner couverture par sommets
+    for cliq in C:
+        for sommet in cliq:
+            dico_sommets_par_cliqs[sommet].append(cliq);
+            
+            
+    return C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites, \
+            dico_sommets_par_cliqs;
 
-def decouverte_cliques( matE, dico_sommet_arete, seuil_U= 10, epsilon = 0.75, \
-                        chemin_dataset = "data/datasets/", chemin_matrices = "data/matrices/",\
-                        ascendant_1 = True, simulation = True, dico_proba_cases= dict(),\
-                        arg_params = dict()):
+def decouverte_cliques(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
+                        chemin_dataset="data/datasets/", 
+                        chemin_matrices="data/matrices/",
+                        ascendant_1=True, simulation=True, 
+                        dico_proba_cases=dict(),
+                        arg_params=dict()):
     """
     valeurs Parametres Par defaut: 
         seuil_U= 10, epsilon = 0.75, \
@@ -786,6 +841,7 @@ def decouverte_cliques( matE, dico_sommet_arete, seuil_U= 10, epsilon = 0.75, \
     """
     #initialisation cliq et ver et C
     dico_cliq = dict(); dico_ver = dict(); C = list(); noeuds_corriges = list();
+    dico_sommets_par_cliqs = dict();
     ordre_noeuds_traites = list();
     for sommet in matE.columns.tolist():   # nbre de noeuds dans le graphe
         dico_cliq[sommet] = 0; dico_ver[sommet] = 0
@@ -794,8 +850,10 @@ def decouverte_cliques( matE, dico_sommet_arete, seuil_U= 10, epsilon = 0.75, \
     liste_grandeurs = fct_aux.liste_grandeurs(chemin_dataset)
     df_fusion = VerifCorrel.merger_dataframe(liste_grandeurs, chemin_dataset) 
     df_fusion.fillna(0, inplace = True)
-    arguments_MAJ = {"dico_sommet_arete": dico_sommet_arete, "df_fusion": df_fusion, \
-                     "seuil_U": seuil_U, "epsilon":epsilon, "chemin_dataset": chemin_dataset,\
+    arguments_MAJ = {"dico_sommet_arete": dico_sommet_arete, 
+                     "df_fusion": df_fusion, 
+                     "seuil_U": seuil_U, "epsilon":epsilon, 
+                     "chemin_dataset": chemin_dataset,
                      "simulation": simulation, "grandeurs": liste_grandeurs}
 #    print("df_fusion: ", df_fusion.describe());
 #    print("liste_grandeurs: ", liste_grandeurs)
@@ -814,9 +872,13 @@ def decouverte_cliques( matE, dico_sommet_arete, seuil_U= 10, epsilon = 0.75, \
         #print("le traiter avec Verif_correl ou ORACLE")
         return [], [], None, 0
     else:
-        C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites = \
-            couverture_en_cliques(dico_cliq.copy(), dico_gamma_noeud.copy(), liste_aretes_Ec.copy(), \
-                                  matE.copy(), dico_ver, arguments_MAJ.copy())
+        C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites, \
+        dico_sommets_par_cliqs = couverture_en_cliques(dico_cliq.copy(), 
+                                                     dico_gamma_noeud.copy(), 
+                                                     liste_aretes_Ec.copy(), 
+                                                     matE.copy(), 
+                                                     dico_ver, 
+                                                     arguments_MAJ.copy())
 #    return {0:[C, dico_cliq, E0, [], [], [], -11110,C]} # a DELETE
     print("Avant Correction liste_aretes_Ec = ", len(liste_aretes_Ec))#, "@@@@ C = ",C)
     som_cout_min = 0; 
