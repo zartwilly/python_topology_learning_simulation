@@ -82,7 +82,7 @@ def generer_tuple(liste):
                 list_tuple.append( (liste[i],liste[j]) )
     return list_tuple
 
-def liste_arcs(matE):
+def liste_arcs_old(matE):
     liste_cols = matE.columns.tolist()
     tmp = list()
     res = list()
@@ -94,6 +94,14 @@ def liste_arcs(matE):
                     tmp.append( (row,col) )
                     res.append( (row, col) )
     return res
+def liste_arcs(mat):
+    """ retourne la liste des arcs ou aretes d'un graphe. """
+    res = list();
+    for row, col in range_2d(mat.columns.tolist()):
+        if mat.loc[row][col] == 1 or mat.loc[col][row] == 1:
+            res.append((row, col))
+    return res;
+    
 def liste_nonArcs(matE, k0):
     """
     but: trouver toutes les non aretes de matE cad matE.loc[x][y] == 0
