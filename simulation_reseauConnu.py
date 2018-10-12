@@ -9,12 +9,14 @@ import re
 import os 
 import time
 import math
+import random
 import pandas as pd
 import numpy as np
 import fonctions_auxiliaires as fct_aux
 import generations_mesures as mesures
 import decouverte_cliques as decouvClique
 import genererMatA as geneMatA
+import algorithme_correction as algoCorrection
 
 #import matplotlib.pyplot as plt
 from pathlib import Path    # http://stackoverflow.com/questions/6004073/how-can-i-create-directories-recursively
@@ -24,15 +26,8 @@ from pandas.parser import CParserError;
 import multiprocessing as mp
 from scipy.stats import truncnorm
 from random import randint as valAleotoire
-import random;
 
-def liste_arcs(mat):
-    """ retourne la liste des arcs ou aretes d'un graphe. """
-    res = list();
-    for row, col in fct_aux.range_2d(mat.columns.tolist()):
-        if mat.loc[row][col] == 1 or mat.loc[col][row] == 1:
-            res.append((row, col))
-    return res;
+
     
 def nommage_arcs(mat):
     """ nommage des arcs du graphe du reseau energetique.
@@ -43,7 +38,7 @@ def nommage_arcs(mat):
         
     """
     dico_arcs_sommets = dict();
-    for arc in liste_arcs(mat):
+    for arc in fct_aux.liste_arcs(mat):
         dico_arcs_sommets["_".join(arc)] = arc;
     return dico_arcs_sommets
     
@@ -86,7 +81,7 @@ def creer_reseau(chemin_datasets, chemin_matrices, args):
 
     
     #matrice du linegraphe du reseau de flot a determiner
-    arcs = liste_arcs(mat)
+    arcs = fct_aux.liste_arcs(mat)
     matE = mesures.creation_matE(dico_arcs_sommets, arcs)
     matE.to_csv(chemin_matrices+"matE.csv")
     return matE, mat, dico_arcs_sommets;
@@ -112,24 +107,24 @@ def simulation_nouveau_critere(args):
         matE_k_alpha.loc["c_b","a_b"] = 0;
         dico_k_erreurs["aretes_supprimees"].append(("a_b","b_c"));
     else:
-        aretes_matE = matE_k_alpha.columns.tolist()
+        aretes_mat = matE_k_alpha.columns.tolist()
         for _ in range(math.ceil(args["k_erreurs"] * args["p_correl"])):         # suppression d'aretes
-            irow,row = random.choice(list(enumerate(aretes_matE)));
-            aretes_matE.pop(irow);
-            icol,col = random.choice(list(enumerate(aretes_matE)));
-            aretes_matE.pop(icol);
+            irow,row = random.choice(list(enumerate(aretes_mat)));
+            aretes_mat.pop(irow);
+            icol,col = random.choice(list(enumerate(aretes_mat)));
+            aretes_mat.pop(icol);
             
             matE_k_alpha.loc[row,col] = 0;
             matE_k_alpha.loc[col,row] = 0;
             dico_k_erreurs["aretes_supprimees"].append((row,col));
             
-        aretes_matE = matE_k_alpha.columns.tolist()
+        aretes_mat = matE_k_alpha.columns.tolist()
         for _ in range(args["k_erreurs"] - math.ceil(args["k_erreurs"] * 
                                                     args["p_correl"])):         # ajout d'aretes
-            irow,row = random.choice(list(enumerate(aretes_matE)));
-            aretes_matE.pop(irow);
-            icol,col = random.choice(list(enumerate(aretes_matE)));
-            aretes_matE.pop(icol);
+            irow,row = random.choice(list(enumerate(aretes_mat)));
+            aretes_mat.pop(irow);
+            icol,col = random.choice(list(enumerate(aretes_mat)));
+            aretes_mat.pop(icol);
             
             matE_k_alpha.loc[row,col] = 1;
             matE_k_alpha.loc[col,row] = 1;
@@ -139,7 +134,7 @@ def simulation_nouveau_critere(args):
     C = list(); aretes_Ec = list();
     dico_cliq = dict(); dico_sommets_par_cliqs = dict();
     C, dico_cliq, aretes_Ec, ordre_noeuds_traites, dico_sommets_par_cliqs = \
-    decouvClique.decouverte_cliques(matE_k_alpha, dico_arcs_sommets, \
+    decouvClique.decouverte_cliques_new(matE_k_alpha, dico_arcs_sommets, \
                                     args["seuil_U"], args["epsilon"], \
                                     args["chemin_datasets"], 
                                     args["chemin_matrices"],
@@ -150,6 +145,22 @@ def simulation_nouveau_critere(args):
     print("aretes_Ec={},\n C={} ,\n sommets_par_cliqs={},\n dico_k_erreurs={},\n dict_cliq={}".\
           format(len(aretes_Ec), C, dico_sommets_par_cliqs, dico_k_erreurs, 
                  dico_cliq))
+    
+    
+    ### correction
+    if len(aretes_Ec) != 0:
+        C_old = C.copy(); 
+        args["C"] = C.copy();
+        args["dico_sommets_par_cliqs"] = dico_sommets_par_cliqs;
+        args["dico_cliq"] = dico_cliq;
+        args["aretes_matE0"] = fct_aux.liste_arcs(matE_k_alpha);
+        dico_solution = algoCorrection.correction_graphe_correlation(args);
+        return dico_solution;
+    else:
+        cout_correction = 0; noeuds_corriges = list()
+        return {cout_correction:[C, dico_cliq, ordre_noeuds_traites,
+                                 dico_sommets_par_cliqs, noeuds_corriges,
+                                 C_old]}
     return matE_k_alpha
 
 if __name__ == '__main__':
@@ -172,14 +183,18 @@ if __name__ == '__main__':
      epsilon = 0.75;
      ascendant_1 = True;
      simulation = True;
-     number_items_pi1_pi2 = 1;
      k_erreurs = 1; 
      p_correl = 0.5;
+     number_items_pi1_pi2 = 1;
+     mode_correction = "aleatoire_sans_remise";                                 # "aleatoire_sans_remise", degre_min_sans_remise, cout_min_sans_remise, aleatoire_avec_remise", degre_min_avec_remise, cout_min_avec_remise, 
+     critere_selection_compression = "voisins_corriges"                                    # "voisins_corriges", "somme_cout_min", 
      args = {"dbg":True, "seuil_U":seuil_U, "epsilon":epsilon, 
              "ascendant_1":ascendant_1, "simulation":simulation,
-             "number_items_pi1_pi2":number_items_pi1_pi2,
              "k_erreurs":k_erreurs, 
              "p_correl":p_correl,
+             "number_items_pi1_pi2":number_items_pi1_pi2,
+             "mode_correction":mode_correction,
+             "critere_selection_compression":critere_selection_compression,
              "chemin_datasets":chemin_datasets,
              "chemin_matrices":chemin_matrices}
     
