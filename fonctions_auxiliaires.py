@@ -101,6 +101,14 @@ def liste_arcs(mat):
         if mat.loc[row][col] == 1 or mat.loc[col][row] == 1:
             res.append((row, col))
     return res;
+
+def couverture_par_sommets(C):
+    """ retourne les cliques couvrants tous les sommets d'un graphe. """ 
+    dico_sommets_par_cliqs = dict();
+    for cliq in C:
+        for sommet in cliq:
+            dico_sommets_par_cliqs[sommet].append(cliq);
+    return dico_sommets_par_cliqs;
     
 def liste_nonArcs(matE, k0):
     """
