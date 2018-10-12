@@ -879,8 +879,8 @@ def decouverte_cliques(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
                                                      matE.copy(), 
                                                      dico_ver, 
                                                      arguments_MAJ.copy())
-    return C, dico_cliq, liste_aretes_Ec,\
-            ordre_noeuds_traites, dico_sommets_par_cliqs
+#    return C, dico_cliq, liste_aretes_Ec,\
+#            ordre_noeuds_traites, dico_sommets_par_cliqs
 #    return {0:[C, dico_cliq, E0, [], [], [], -11110,C]} # a DELETE
     print("Avant Correction liste_aretes_Ec = ", len(liste_aretes_Ec))#, "@@@@ C = ",C)
     som_cout_min = 0; 
@@ -902,6 +902,106 @@ def decouverte_cliques(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
     pass
 #ens_C_i, dico_cliq, liste_aretes_E_C_i, min_cliques_aSupprDe_ens_C, noeuds_traites, som_cout_min;  
 #####
+
+########################## decouverte cliques nouveau #########################
+def decouverte_cliques_new(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
+                        chemin_dataset="data/datasets/", 
+                        chemin_matrices="data/matrices/",
+                        ascendant_1=True, simulation=True, 
+                        dico_proba_cases=dict(),
+                        arg_params=dict()):
+    """
+    valeurs Parametres Par defaut: 
+        seuil_U= 10, epsilon = 0.75, \
+        chemin_dataset = "data/datasets/", chemin_matrices = "data/matrices/",\
+        ascendant_1 = True, simulation = True, number_items_pi1_pi2 = 1, \
+        number_permutations_nodes_1 = 10,
+        
+    BUT: recherche une couverture en cliques du graphe matE.
+         Si matE est correct, aucun sommet n'est labellise par -1 cad dico_cliq.values != -1.
+             on retourne la couverture la liste de toutes les cliques decouvertes
+             variables returned :
+                 C, E0, dico_cliq, som_cout_min
+         si matE est incorrect, certains sommets sont labellises a -1
+             on conserve les cliques decouvertes dans ens_C_i
+             puis on execute la fonction correction_noeuds
+             variables returned :
+                 ens_C, liste_arcs, dico_cliq, som_cout_min
+                 
+    definition:
+        C : ensemble de cliques. est la couverture en cliques
+        ens_C: ensemble de cliques dont certains cliques sont labellises a -1
+        liste_aretes = liste_arcs: ensemble de tous les aretes de matE
+        E0 : liste aretes de matE. egale a liste_aretes. E0 ne subit aucune modification.
+                elle est envoyee a la fonction "correction_noeuds"
+        dico_cliq: dictionnaire des noeuds labellises, chaque noeud a trois labels: 0,1,2,-1
+                    0: etat initiale. n'est couvert par aucune clique
+                    1: est couvert par 2 cliques au maximum
+                    2: est couvert par 1 clique. peut etre couvert par une autre clique
+                    -1: est couvert par plus de 2 cliques.
+        som_cout_min: en cas de correction de noeuds, on compte le nombre d'aretes supprimees 
+                        et ajoutees.
+        dico_sommet_arete: dico de dualite entre les sommets et leur aretes. 
+                            sommet est associe a un linegraph, 
+                            aretes est associe au reseau de flots non orientes
+        epsilon: valeur a partir de laquel une clique correspond a un sommet.
+                    est utilisee dans MAJ.
+        seuil_U: ne sert pas actu
+        chemin_dataset: chemin du repertoire contenant les datasets de chaque grandeur
+        chemin_dataset: chemin du repertoire contenant les matrices d'adjacence (matE, matA)
+        ascendant_1: definit l'ordre dans lequel les noeuds a -1 sont selectionnees.
+                    s'il est a True alors cest du plus petit au plus grand
+                    s'il est a True alors cest du plus grand au plus petit
+        arg_params = {"number_permutations_nodes_1": 10, "biais": True, "algoGreedy":True, \
+                  "mode_select_noeuds_1":"coutMin" or "degreMin" or "aleatoire", "number_items_pi1_pi2" = 1,\
+                  "methode_delete_add_edges": 0, "coef_fct_cout":(1,1)}
+    """
+    #initialisation cliq et ver et C
+    dico_cliq = dict(); dico_ver = dict(); C = list();
+    dico_sommets_par_cliqs = dict();
+    ordre_noeuds_traites = list();
+    for sommet in matE.columns.tolist():   # nbre de noeuds dans le graphe
+        dico_cliq[sommet] = 0; dico_ver[sommet] = 0
+    
+    # fusion des datasets 
+    liste_grandeurs = fct_aux.liste_grandeurs(chemin_dataset)
+    df_fusion = VerifCorrel.merger_dataframe(liste_grandeurs, chemin_dataset) 
+    df_fusion.fillna(0, inplace = True)
+    arguments_MAJ = {"dico_sommet_arete": dico_sommet_arete, 
+                     "df_fusion": df_fusion, 
+                     "seuil_U": seuil_U, "epsilon":epsilon, 
+                     "chemin_dataset": chemin_dataset,
+                     "simulation": simulation, "grandeurs": liste_grandeurs}
+#    print("df_fusion: ", df_fusion.describe());
+#    print("liste_grandeurs: ", liste_grandeurs)
+#    print(" chemin_dataset: ",chemin_dataset);
+#    print("chemin_matrices: ", chemin_matrices)                 
+    # copy E0 <- Ec
+    liste_aretes_Ec = fct_aux.liste_arcs(matE)
+    dico_gamma_noeud = fct_aux.gamma_noeud(matE, liste_aretes_Ec) # {"2":[3,{"1","3","4"}],....}
+    
+    E0 = liste_aretes_Ec.copy()
+    
+    if is_isomorphe_graphe_double(liste_aretes_Ec) :
+        """
+        DEMANDER A DOMINIK CE QU"EST CE un GRAPHE DOUBLE ==> trouver
+        """
+        #print("le traiter avec Verif_correl ou ORACLE")
+        return [], [], None, 0
+    else:
+        C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites, \
+        dico_sommets_par_cliqs = couverture_en_cliques(dico_cliq.copy(), 
+                                                     dico_gamma_noeud.copy(), 
+                                                     liste_aretes_Ec.copy(), 
+                                                     matE.copy(), 
+                                                     dico_ver, 
+                                                     arguments_MAJ.copy())
+    return C, dico_cliq, liste_aretes_Ec,\
+            ordre_noeuds_traites, dico_sommets_par_cliqs
+#ens_C_i, dico_cliq, liste_aretes_E_C_i, min_cliques_aSupprDe_ens_C, noeuds_traites, som_cout_min;  
+
+########################## decouverte cliques nouveau #########################
+
 def solution_methode_nodes_1(dico_gamma_noeud,cliques, aretes_E0, ordre_noeuds_traites, \
                              dico_cliq, dico_proba_cases, arg_params):
     """
