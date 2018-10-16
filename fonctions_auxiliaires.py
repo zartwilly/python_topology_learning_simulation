@@ -34,6 +34,13 @@ def range_2d(columns):
                 treated.append( (row,col) )
                 yield row, col;
                 
+def range_list(liste1, liste2):
+    """ a essayer le produit cartesien
+    """
+    for elt1 in liste1:
+        for elt2 in liste2:
+            yield elt1, elt2;
+                
 def liste_grandeurs(chemin):
     files = os.listdir(chemin)
     liste_files = [fichier for fichier in files if  re.match("^dataset_.*",fichier)]
