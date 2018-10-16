@@ -987,17 +987,18 @@ def decouverte_cliques_new(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
         DEMANDER A DOMINIK CE QU"EST CE un GRAPHE DOUBLE ==> trouver
         """
         #print("le traiter avec Verif_correl ou ORACLE")
-        return [], [], None, 0
+        return [], [], None, [], dico_sommets_par_cliqs, dico_gamma_noeud;
     else:
         C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites, \
-        dico_sommets_par_cliqs = couverture_en_cliques(dico_cliq.copy(), 
+        dico_sommets_par_cliqs = couverture_en_cliques(
+                                                     dico_cliq.copy(), 
                                                      dico_gamma_noeud.copy(), 
                                                      liste_aretes_Ec.copy(), 
                                                      matE.copy(), 
                                                      dico_ver, 
                                                      arguments_MAJ.copy())
     return C, dico_cliq, liste_aretes_Ec,\
-            ordre_noeuds_traites, dico_sommets_par_cliqs
+            ordre_noeuds_traites, dico_sommets_par_cliqs, dico_gamma_noeud; 
 #ens_C_i, dico_cliq, liste_aretes_E_C_i, min_cliques_aSupprDe_ens_C, noeuds_traites, som_cout_min;  
 
 ########################## decouverte cliques nouveau #########################
