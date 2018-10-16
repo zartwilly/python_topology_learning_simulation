@@ -187,7 +187,8 @@ def gamma_noeud_(matE):
     dico = dict()
     l_noeuds = matE.columns.tolist()
     for noeud in l_noeuds:
-        ens = set([xj for xj in matE.columns.tolist() if matE.loc[noeud][xj] == 1 ])
+        ens = frozenset([xj for xj in matE.columns.tolist() \
+                         if matE.loc[noeud][xj] == 1 ])
         dico[noeud] = [len(ens), ens]
     return dico
 def gamma_noeud(matE, liste_aretes):
@@ -198,7 +199,7 @@ def gamma_noeud(matE, liste_aretes):
     dico = dict()
     l_noeuds = matE.columns.tolist()
     for noeud in l_noeuds:
-        ens = set()
+        ens = frozenset()
         for arc in liste_aretes:
             if noeud == arc[0]:
                 ens.add( arc[1] )
