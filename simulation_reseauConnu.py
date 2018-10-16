@@ -133,7 +133,9 @@ def simulation_nouveau_critere(args):
     # algorithme de couverture
     C = list(); aretes_Ec = list();
     dico_cliq = dict(); dico_sommets_par_cliqs = dict();
-    C, dico_cliq, aretes_Ec, ordre_noeuds_traites, dico_sommets_par_cliqs = \
+    dico_gamma_sommets = dict()
+    C, dico_cliq, aretes_Ec, ordre_noeuds_traites, \
+    dico_sommets_par_cliqs, dico_gamma_sommets = \
     decouvClique.decouverte_cliques_new(matE_k_alpha, dico_arcs_sommets, \
                                     args["seuil_U"], args["epsilon"], \
                                     args["chemin_datasets"], 
@@ -153,7 +155,8 @@ def simulation_nouveau_critere(args):
         args["C"] = C.copy();
         args["dico_sommets_par_cliqs"] = dico_sommets_par_cliqs;
         args["dico_cliq"] = dico_cliq;
-        args["aretes_matE0"] = fct_aux.liste_arcs(matE_k_alpha);
+        args["aretes_Ec"] = fct_aux.liste_arcs(matE_k_alpha);
+        args["dico_gamma_sommets"] = dico_gamma_sommets;
         dico_solution = algoCorrection.correction_graphe_correlation(args);
         return dico_solution;
     else:
