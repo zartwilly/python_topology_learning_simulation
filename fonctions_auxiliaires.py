@@ -37,9 +37,16 @@ def range_2d(columns):
 def range_list(liste1, liste2):
     """ a essayer le produit cartesien
     """
-    for elt1 in liste1:
+    if not liste1 : 
         for elt2 in liste2:
-            yield elt1, elt2;
+            yield [], elt2;
+    elif not liste2 : 
+        for elt1 in liste1:
+            yield elt1, [];
+    else:
+        for elt1 in liste1:
+            for elt2 in liste2:
+                yield elt1, elt2;
                 
 def liste_grandeurs(chemin):
     files = os.listdir(chemin)
