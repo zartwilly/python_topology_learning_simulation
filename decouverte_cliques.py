@@ -699,8 +699,10 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE,
             if Cu1 is not None or Cu2 is not None:
                 dico_cliq[noeud_u] = 1; dico_ver[noeud_u] = 1;
                 #print("01 Cu1: ",Cu1," Cu2: ",Cu2)
-                C.append( Cu1 ) if set(Cu1) not in C and len(Cu1) != 0 else None
-                C.append( Cu2 ) if set(Cu2) not in C and len(Cu2) != 0 else None
+                C.append(frozenset(Cu1)) if set(Cu1) not in C and \
+                                            len(Cu1) != 0 else None
+                C.append(frozenset(Cu2)) if set(Cu2) not in C and \
+                                            len(Cu2) != 0 else None
                 liste_aretes_Ec = aretes_a_supprimer(liste_aretes_Ec, 
                                                      [list(Cu1), list(Cu2)] )
             
@@ -752,7 +754,7 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE,
 
                 dico_cliq[noeud_u] = 1; dico_ver[noeud_u] = 1;
                 if len(Cu) != 1 and Cu not in C:
-                    C.append( Cu );
+                    C.append(frozenset(Cu));
 #                        print("ICI noeud_u: ",noeud_u, " add clique ",Cu)
                     
                 #print(" -----1 liste_aretes_Ec: ", len(liste_aretes_Ec), " Cu: ",Cu )
