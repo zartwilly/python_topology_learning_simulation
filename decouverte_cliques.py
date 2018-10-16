@@ -978,7 +978,7 @@ def decouverte_cliques_new(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
 #    print("chemin_matrices: ", chemin_matrices)                 
     # copy E0 <- Ec
     liste_aretes_Ec = fct_aux.liste_arcs(matE)
-    dico_gamma_noeud = fct_aux.gamma_noeud(matE, liste_aretes_Ec) # {"2":[3,{"1","3","4"}],....}
+    dico_gamma_sommets = fct_aux.gamma_noeud(matE, liste_aretes_Ec) # {"2":[3,{"1","3","4"}],....}
     
     E0 = liste_aretes_Ec.copy()
     
@@ -987,18 +987,18 @@ def decouverte_cliques_new(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
         DEMANDER A DOMINIK CE QU"EST CE un GRAPHE DOUBLE ==> trouver
         """
         #print("le traiter avec Verif_correl ou ORACLE")
-        return [], [], None, [], dico_sommets_par_cliqs, dico_gamma_noeud;
+        return [], [], None, [], dico_sommets_par_cliqs, dico_gamma_sommets;
     else:
         C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites, \
         dico_sommets_par_cliqs = couverture_en_cliques(
                                                      dico_cliq.copy(), 
-                                                     dico_gamma_noeud.copy(), 
+                                                     dico_gamma_sommets.copy(), 
                                                      liste_aretes_Ec.copy(), 
                                                      matE.copy(), 
                                                      dico_ver, 
                                                      arguments_MAJ.copy())
     return C, dico_cliq, liste_aretes_Ec,\
-            ordre_noeuds_traites, dico_sommets_par_cliqs, dico_gamma_noeud; 
+            ordre_noeuds_traites, dico_sommets_par_cliqs, dico_gamma_sommets; 
 #ens_C_i, dico_cliq, liste_aretes_E_C_i, min_cliques_aSupprDe_ens_C, noeuds_traites, som_cout_min;  
 
 ########################## decouverte cliques nouveau #########################
