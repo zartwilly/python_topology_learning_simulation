@@ -396,37 +396,43 @@ def correction_graphe_correlation(args):
                                                              cliques_sommet_1,
                                                             args);
                                  
-            # dico_sol_C2_C1 = {id_sommet_1:, sommet_1:, compression:(pi1,p2,ps), voisins_corriges:{"id_voisin_ds_sommets_a_corriger":voisin}, cout_T:{"":[],"":[]}} 
-#            dico_p1_p2_ps[] = {
-#                    "id_sommet_1":,"sommet_1":,"p1":,"p2":,"ps":,
-#                    "voisine":,"dependante":,
-#                    "contractable1":,"contractable2":,
-#                    "S1":,"S_z":,
-#                    "aretes_ajoute_p1":,"aretes_ajoute_p2":,
-#                    "aretes_supprimes_ps":,"aretes_Ec_new":,"C_new":,
-#                    "sommets_corriges":,"sommets_non_corriges":,
-#                    "dico_sommets_par_cliqs_new": 
-#                    }
+            # dico_sol_C2_C1 = {
+            #        "id_sommet_1":,"sommet_1":,"p1":,"p2":,"ps":,
+            #        "voisine":,"dependante":,
+            #        "contractable1":,"contractable2":,
+            #        "S1":,"S_z":,
+            #        "aretes_ajoute_p1":,"aretes_ajoute_p2":,
+            #        "aretes_supprimes_ps":,"aretes_Ec_new":,"C_new":,
+            #        "sommets_corriges":,"sommets_non_corriges":,
+            #        "dico_sommets_par_cliqs_new": 
+            #        }
             dico_sol_C2_C1 = dict();
             min_c1 = 0; max_c2 = 0;
             min_c1, max_c2, dico_sol_C2_C1 = critere_C2_C1(dico_compression,
                                                            args)                # C2 : nombre maximum de voisins corriges par un sommet, C1 : nombre minimum d'aretes a corriger au voisinage d'un sommet  
-            C, aretes_Ec = appliquer_correction(dico_sol_C2_C1, 
+            C, aretes_Ec, sommets_a_corriger = appliquer_correction(
+                                                dico_sol_C2_C1,
+                                                sommets_a_corriger,
                                                 args)
             args["C"] = C;
             args["aretes_cliques"] = aretes_dans_cliques(C);
             args["aretes_Ec"] = aretes_Ec;
+            cout_T = {"aretes_ajoutes_p1":dico_sol_C2_C1["aretes_ajoute_p1"],
+                      "aretes_ajoutes_p2":dico_sol_C2_C1["aretes_ajoute_p2"],
+                      "aretes_supprimes":dico_sol_C2_C1["aretes_supprimes_ps"],
+                      "min_c1":min_c1,"max_c2":max_c2};
             dico_sommets_corriges[(cpt_noeud, dico_sol_C2_C1["sommet_1"])] = {
-                        "compression_p1":dico_sol_C2_C1["compression"][0],
-                        "compression_p2":dico_sol_C2_C1["compression"][1],
-                        "compression_ps":dico_sol_C2_C1["compression"][2],
+                        "compression_p1":dico_sol_C2_C1["p1"],
+                        "compression_p2":dico_sol_C2_C1["p2"],
+                        "compression_ps":dico_sol_C2_C1["ps"],
                         "sommets_corriges":dico_sol_C2_C1["sommets_corriges"], # voisins_corriges = {"id_voisin_ds_sommets_a_corriger":voisin}
-                        "cout_T":dico_sol_C2_C1["cout_T"],                     # cout_T={"aretes_ajoutes":[],"aretes_supprimees":[]}
-                                                }
-            sommets_a_corriger.pop(dico_sol_C2_C1["id_sommet_1"])
-        # mettre a jour les cliques couvrants les sommets.
-        args["dico_sommets_par_cliqs"] = fct_aux.couverture_par_sommets(
-                                            args["C"]);
+                        "cout_T": cout_T
+                        }
+            
+            # mettre a jour les cliques couvrants les sommets.
+            args["dico_sommets_par_cliqs"] = dico_sol_C2_C1[
+                                                "dico_sommets_par_cliqs_new"
+                                                ]
         return args, dico_sommets_corriges;
         
 if __name__ == '__main__':
