@@ -310,7 +310,7 @@ def compression_sommet(sommet_z, sommets_a_corriger, cliques_sommet_z, args):
 ################### fonctions de bases pour la correction ==> fin   ###########
 
 ################### critere selection  compression ==> debut ##################
-def critere_C2_C1(dico_compression) :
+def critere_C2_C1(dico_compression, args) :
     """ selectionner le dico selon C2 puis C1
     
     C2 : la maximum de sommets corriges
@@ -323,23 +323,49 @@ def critere_C2_C1(dico_compression) :
     max_c2 = 0;
     min_c1 = 0;
     dico_c1_c2 = dict();
-    for cpt, dico_p1_p2_ps in dico_compression.items():
-        if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
-            max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
+    
+    # definition de C2
+    if args["critere_selection_compression"] == "voisins_corriges":             # C2
+        for cpt, dico_p1_p2_ps in dico_compression.items():
+            if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
+                max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
+                min_c1 = max_c2
+                if min_c1 in dico_c1_c2:
+                    dico_c1_c2[min_c1] = [dico_p1_p2_ps];
+                else:
+                    dico_c1_c2[min_c1].append(dico_p1_p2_ps);
+    # definition de C1
+    elif args["critere_selection_compression"] == "nombre_aretes_corriges":     # C1
+        for cpt, dico_p1_p2_ps in dico_compression.items():
             nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoute_p1"]) + \
                                     len(dico_p1_p2_ps["aretes_ajoute_p2"]) + \
                                     len(dico_p1_p2_ps["aretes_supprimes_ps"]);
             min_c1 = nbre_aretes_corriges if min_c1 > nbre_aretes_corriges \
-                                            else min_c1;
-            if nbre_aretes_corriges in dico_c1_c2:
-                dico_c1_c2[nbre_aretes_corriges] = [dico_p1_p2_ps];
+                                          else min_c1;
+            if min_c1 in dico_c1_c2:
+                dico_c1_c2[min_c1] = [dico_p1_p2_ps];
             else:
-                dico_c1_c2[nbre_aretes_corriges].append(dico_p1_p2_ps);
+                dico_c1_c2[min_c1].append(dico_p1_p2_ps);
+        pass
+    # definition de C2 puis de C1
+    elif args["critere_selection_compression"] == "voisins_nombre_aretes_corriges": # C2_C1
+        for cpt, dico_p1_p2_ps in dico_compression.items():
+            if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
+                max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
+                nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoute_p1"]) + \
+                                    len(dico_p1_p2_ps["aretes_ajoute_p2"]) + \
+                                    len(dico_p1_p2_ps["aretes_supprimes_ps"]);
+                min_c1 = nbre_aretes_corriges if min_c1 > nbre_aretes_corriges \
+                                                else min_c1;
+                if min_c1 in dico_c1_c2:
+                    dico_c1_c2[min_c1] = [dico_p1_p2_ps];
+                else:
+                    dico_c1_c2[min_c1].append(dico_p1_p2_ps);
+                    
     if not dico_c1_c2:
         return min_c1, max_c2, dico_c1_c2;
     else:
         return min_c1, max_c2, dico_c1_c2[min_c1];
-    
 ################### critere selection  compression ==> fin ##################
 
 
@@ -368,8 +394,9 @@ def correction_graphe_correlation(args):
                                  
             # dico_sol_C2_C1 = {id_sommet_1:, sommet_1:, compression:(pi1,p2,ps), voisins_corriges:{"id_voisin_ds_sommets_a_corriger":voisin}, cout_T:{"":[],"":[]}} 
             dico_sol_C2_C1 = dict();
-            min_c1 = 0; max_c2 = 0
-            min_c1, max_c2, dico_sol_C2_C1 = critere_C2_C1(dico_compression)   # C2 : nombre maximum de voisins corriges par un sommet, C1 : nombre minimum d'aretes a corriger au voisinage d'un sommet  
+            min_c1 = 0; max_c2 = 0;
+            min_c1, max_c2, dico_sol_C2_C1 = critere_C2_C1(dico_compression,
+                                                           args)                # C2 : nombre maximum de voisins corriges par un sommet, C1 : nombre minimum d'aretes a corriger au voisinage d'un sommet  
             C, aretes_Ec = appliquer_correction(dico_sol_C2_C1["sommet_1"], 
                                                 dico_sol_C2_C1["compression"], 
                                                 args)
