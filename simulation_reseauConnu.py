@@ -190,7 +190,7 @@ if __name__ == '__main__':
      p_correl = 0.5;
      number_items_pi1_pi2 = 1;
      mode_correction = "aleatoire_sans_remise";                                 # "aleatoire_sans_remise", degre_min_sans_remise, cout_min_sans_remise, aleatoire_avec_remise", degre_min_avec_remise, cout_min_avec_remise, 
-     critere_selection_compression = "voisins_corriges"                                    # "voisins_corriges", "somme_cout_min", 
+     critere_selection_compression = "voisins_corriges"                         # "voisins_corriges" (C2), "nombre_aretes_corriges" (C1), "voisins_nombre_aretes_corriges" (C2 puis C1)
      args = {"dbg":True, "seuil_U":seuil_U, "epsilon":epsilon, 
              "ascendant_1":ascendant_1, "simulation":simulation,
              "k_erreurs":k_erreurs, 
