@@ -371,6 +371,26 @@ def critere_C2_C1(dico_compression, args) :
         return min_c1, max_c2, dico_c1_c2[min_c1];
 ################### critere selection  compression ==> fin ##################
 
+################### application de la compression ==> debut ##################
+def appliquer_correction(dico_sol_C2_C1, sommets_a_corriger, args):
+    """ appliquer la compression choisie dans le graphe.
+    """
+    C = list();
+    C = dico_sol_C2_C1["C_new"];
+    aretes_Ec = list();
+    aretes_Ec = dico_sol_C2_C1["aretes_Ec_new"];
+    
+    id_sommets_1 = dico_sol_C2_C1["sommets_corriges"].keys();
+    id_sommets_1.append(dico_sol_C2_C1["id_sommet_1"]);
+    sommets_corriges = dico_sol_C2_C1["sommets_corriges"].values();
+    sommets_a_corriger = np.delete(sommets_a_corriger, id_sommets_1).tolist();
+    if set(sommets_a_corriger).intersection(set(sommets_corriges)) :
+        print("---ERROR : sommets {} suppression : NOK -----".
+              format(sommets_corriges))
+
+    return C, aretes_Ec, sommets_a_corriger;
+################### application de la compression ==> fin ####################
+    
 
 def correction_graphe_correlation(args):
     """ corrige un graphe de correlation en ajoutant ou supprimant des aretes
@@ -385,7 +405,6 @@ def correction_graphe_correlation(args):
         # correction sans remise avec le critere "nombre de voisins corriges"
         cpt_noeud = 0;
         while(sommets_a_corriger):
-            cpt_noeud += 1;
             for id_sommet_1, sommet_1 in enumerate(sommets_a_corriger):
                 cliques_sommet_1 = cliques_sommet(sommet_1, 
                                                   args["dico_sommets_par_cliqs"]);
@@ -421,6 +440,7 @@ def correction_graphe_correlation(args):
                       "aretes_ajoutes_p2":dico_sol_C2_C1["aretes_ajoute_p2"],
                       "aretes_supprimes":dico_sol_C2_C1["aretes_supprimes_ps"],
                       "min_c1":min_c1,"max_c2":max_c2};
+            cpt_noeud += 1;
             dico_sommets_corriges[(cpt_noeud, dico_sol_C2_C1["sommet_1"])] = {
                         "compression_p1":dico_sol_C2_C1["p1"],
                         "compression_p2":dico_sol_C2_C1["p2"],
