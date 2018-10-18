@@ -274,7 +274,7 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
                 voisins_corriges = set()
                 sommets_non_corriges = set(), \
                 dico_sommets_par_cliqs_new = dict();
-                voisins_corriges, sommets_non_corriges, \
+                voisins_corriges, voisins_non_corriges, \
                 dico_sommets_par_cliqs_new = \
                     mise_a_jour_cliques(C_new,
                                         sommets_a_corriger, 
