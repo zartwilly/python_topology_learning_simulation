@@ -175,7 +175,8 @@ def augmentation(sommet_z, gamma_z, cliques_sommet_z, s_z, args):
     
     return dico_cliques_augmentante;              
 
-def compression_sommet(sommet_z, sommets_a_corriger, cliques_sommet_z, args):
+def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger, 
+                       cliques_sommet_z, args):
     """ retourne la compression d'un sommet sommet_z. 
     
     la compression est le triplet (pi1, pi2, ps) dans lequel 
@@ -280,6 +281,8 @@ def compression_sommet(sommet_z, sommets_a_corriger, cliques_sommet_z, args):
                                         args["dico_sommets_par_cliqs"])
                 
                 dico_p1_p2_ps[cpt_prod_cartesien] = {
+                    "id_sommet_z": id_sommet_z,
+                    "sommet_z": sommet_z,
                     "p1": val_cpt_c1_c2_s1["clique_possible"],
                     "p2": val_cpt_vois_depend["voisine"].union(
                             val_cpt_vois_depend["dependante"].union(
@@ -326,17 +329,17 @@ def critere_C2_C1(dico_compression, args) :
     
     # definition de C2
     if args["critere_selection_compression"] == "voisins_corriges":             # C2
-        for cpt, dico_p1_p2_ps in dico_compression.items():
+        for id_sommet_sommet_z, dico_p1_p2_ps in dico_compression.items():
             if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
                 max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
-                min_c1 = max_c2
+                min_c1 = max_c2;
                 if min_c1 in dico_c1_c2:
                     dico_c1_c2[min_c1] = [dico_p1_p2_ps];
                 else:
                     dico_c1_c2[min_c1].append(dico_p1_p2_ps);
     # definition de C1
     elif args["critere_selection_compression"] == "nombre_aretes_corriges":     # C1
-        for cpt, dico_p1_p2_ps in dico_compression.items():
+        for id_sommet_sommet_z, dico_p1_p2_ps in dico_compression.items():
             nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoute_p1"]) + \
                                     len(dico_p1_p2_ps["aretes_ajoute_p2"]) + \
                                     len(dico_p1_p2_ps["aretes_supprimes_ps"]);
@@ -349,7 +352,7 @@ def critere_C2_C1(dico_compression, args) :
         pass
     # definition de C2 puis de C1
     elif args["critere_selection_compression"] == "voisins_nombre_aretes_corriges": # C2_C1
-        for cpt, dico_p1_p2_ps in dico_compression.items():
+        for id_sommet_sommet_z, dico_p1_p2_ps in dico_compression.items():
             if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
                 max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
                 nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoute_p1"]) + \
@@ -387,6 +390,7 @@ def correction_graphe_correlation(args):
                 cliques_sommet_1 = cliques_sommet(sommet_1, 
                                                   args["dico_sommets_par_cliqs"]);
                 dico_compression[(id_sommet_1,sommet_1)] = compression_sommet(
+                                                             id_sommet_1,
                                                              sommet_1,
                                                              sommets_a_corriger,
                                                              cliques_sommet_1,
