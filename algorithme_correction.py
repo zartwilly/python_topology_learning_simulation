@@ -34,7 +34,7 @@ def mise_a_jour_cliques(C_new, sommets_a_corriger, dico_sommets_par_cliqs):
         elif len(cliques_sommet_a_corr) == 1:
             sommets_non_corriges.add(sommet_a_corriger)
         elif len(cliques_sommet_a_corr) == 2:
-            sommets_corriges.add(sommet_a_comise_a_jour_cliquesrriger)
+            sommets_corriges.add(sommet_a_corriger)
         elif len(cliques_sommet_a_corr) > 2:
             sommets_non_corriges.add(sommet_a_corriger)
     return sommets_corriges, dico_sommets_par_cliqs_new
