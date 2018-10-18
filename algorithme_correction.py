@@ -26,18 +26,18 @@ def mise_a_jour_cliques(C_new, sommets_a_corriger, dico_sommets_par_cliqs):
     """
     
     dico_sommets_par_cliqs_new = fct_aux.couverture_par_sommets(C_new);
-    sommets_corriges = set(); sommets_non_corriges = set();
-    for sommet_a_corriger in sommets_a_corriger:
+    dico_sommets_corriges = dict(); dico_sommets_non_corriges = dict();
+    for id_sommet, sommet_a_corriger in enumerate(sommets_a_corriger):
         cliques_sommet_a_corr = dico_sommets_par_cliqs_new[sommet_a_corriger];
         if len(cliques_sommet_a_corr) == 0:
-            sommets_non_corriges.add(sommet_a_corriger)
+            dico_sommets_non_corriges[id_sommet] = sommet_a_corriger;
         elif len(cliques_sommet_a_corr) == 1:
-            sommets_non_corriges.add(sommet_a_corriger)
+            dico_sommets_non_corriges[id_sommet] = sommet_a_corriger;
         elif len(cliques_sommet_a_corr) == 2:
-            sommets_corriges.add(sommet_a_corriger)
+            dico_sommets_corriges[id_sommet] = sommet_a_corriger;
         elif len(cliques_sommet_a_corr) > 2:
-            sommets_non_corriges.add(sommet_a_corriger)
-    return sommets_corriges, dico_sommets_par_cliqs_new
+            dico_sommets_non_corriges[id_sommet] = sommet_a_corriger;
+    return dico_sommets_corriges, dico_sommets_par_cliqs_new;
     
 def aretes_differente(aretes_Ec, aretes_cible):
     """ retourner le nombre d'aretes differente entre aretes_Ec, aretes_cible. """
@@ -271,10 +271,10 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
                 C_new.add( p1 );
                 C_new.add( p2 );
                 
-                sommets_corriges = set()
-                sommets_non_corriges = set(), \
+                dico_sommets_corriges = dict()
+                dico_sommets_non_corriges = dict(), \
                 dico_sommets_par_cliqs_new = dict();
-                sommets_corriges, sommets_non_corriges, \
+                dico_sommets_corriges, dico_sommets_non_corriges, \
                 dico_sommets_par_cliqs_new = \
                     mise_a_jour_cliques(C_new,
                                         sommets_a_corriger, 
@@ -299,8 +299,8 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
                     "aretes_supprimes_ps": aretes_ps,
                     "aretes_Ec_new": aretes_Ec_new,
                     "C_new": C_new,
-                    "sommets_corriges": sommets_corriges,
-                    "sommets_non_corriges": sommets_non_corriges,
+                    "sommets_corriges": dico_sommets_corriges,
+                    "sommets_non_corriges": dico_sommets_non_corriges,
                     "dico_sommets_par_cliqs_new": dico_sommets_par_cliqs_new
                     }
             if cpt_prod_cartesien <= nbre_elts_pi1_pi2:
@@ -420,7 +420,7 @@ def correction_graphe_correlation(args):
                         "compression_p1":dico_sol_C2_C1["compression"][0],
                         "compression_p2":dico_sol_C2_C1["compression"][1],
                         "compression_ps":dico_sol_C2_C1["compression"][2],
-                        "voisins_corriges":dico_sol_C2_C1["voisins_corriges"], # voisins_corriges = {"id_voisin_ds_sommets_a_corriger":voisin}
+                        "sommets_corriges":dico_sol_C2_C1["sommets_corriges"], # voisins_corriges = {"id_voisin_ds_sommets_a_corriger":voisin}
                         "cout_T":dico_sol_C2_C1["cout_T"],                     # cout_T={"aretes_ajoutes":[],"aretes_supprimees":[]}
                                                 }
             sommets_a_corriger.pop(dico_sol_C2_C1["id_sommet_1"])
