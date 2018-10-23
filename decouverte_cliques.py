@@ -24,6 +24,7 @@ import time
 import itertools as it
 import random;
 import math;
+import logging
 ##### A EFFACER
 import os
 #import matplotlib.pyplot as plt
@@ -659,6 +660,7 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE,
                                 un sommet
     
     """
+    logger = logging.getLogger('couverture_en_cliques')
     C = list();
     ordre_noeuds_traites = list();
     dico_sommets_par_cliqs = dict();
@@ -682,6 +684,7 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE,
                                     list(l_sommets_notTag02_NotGama), 
                                     dico_cliq, code="0")                        # noeud de degre min dans l_sommet_notTag02_NotGama
 #                print ("00 noeud_u :", noeud_u )
+            logger.debug("ambiguite=> noeud_u :{}".format(noeud_u))
             if noeud_u is None:
                 l_sommets_notTag02_NotGama = []
                 continue;
@@ -721,6 +724,8 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE,
                 # Cu1 == None ou Cu2 == None
                 #print("01 il n'existe pas 2 partitions de U_gammaU noeud_1=", noeud_u, " a -1");
                 dico_cliq[noeud_u] = -1;
+            logger.debug("ambiguite=> noeud_u :{}, etat={}, cliques=({},{})".\
+                         format(noeud_u, dico_cliq[noeud_u], Cu1, Cu2))
           # fin if len(l_sommet_tag02_gama) == 0
         else:
 #                print("****C = ",C)
@@ -777,13 +782,15 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE,
                 l_sommets_tag02_gama = sommet_tagge02_voisinage_clique(
                                         dico_cliq, liste_aretes_Ec, 
                                         dico_gamma_noeud)
+                logger.debug("noeud_u :{}, etat={}, clique=({})".\
+                         format(noeud_u, dico_cliq[noeud_u], Cu))
                
     ### while fin
     
     ## determiner couverture par sommets
     dico_sommets_par_cliqs = fct_aux.couverture_par_sommets(C)
             
-            
+    logger.debug("ordre noeuds traites:{}".format(ordre_noeuds_traites))
     return C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites, \
             dico_sommets_par_cliqs;
 
@@ -956,6 +963,7 @@ def decouverte_cliques_new(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
                   "mode_select_noeuds_1":"coutMin" or "degreMin" or "aleatoire", "number_items_pi1_pi2" = 1,\
                   "methode_delete_add_edges": 0, "coef_fct_cout":(1,1)}
     """
+    logger = logging.getLogger('Decouverte_cliques_new')
     #initialisation cliq et ver et C
     dico_cliq = dict(); dico_ver = dict(); C = list();
     dico_sommets_par_cliqs = dict();
@@ -964,7 +972,9 @@ def decouverte_cliques_new(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
         dico_cliq[sommet] = 0; dico_ver[sommet] = 0
     
     # fusion des datasets 
+    logger.debug("Creation d'un dataset de mesures physiques")
     liste_grandeurs = fct_aux.liste_grandeurs(chemin_dataset)
+    logger.debug("Grandeurs={}".format(liste_grandeurs))
     df_fusion = VerifCorrel.merger_dataframe(liste_grandeurs, chemin_dataset) 
     df_fusion.fillna(0, inplace = True)
     arguments_MAJ = {"dico_sommet_arete": dico_sommet_arete, 
@@ -979,7 +989,9 @@ def decouverte_cliques_new(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
     # copy E0 <- Ec
     liste_aretes_Ec = fct_aux.liste_arcs(matE)
     dico_gamma_sommets = fct_aux.gamma_noeud(matE, liste_aretes_Ec) # {"2":[3,{"1","3","4"}],....}
+    logger.debug("Gamma_sommets = {}".format(dico_gamma_sommets))
     
+    logger.debug("********* Debut Couverture **********")
     E0 = liste_aretes_Ec.copy()
     
     if is_isomorphe_graphe_double(liste_aretes_Ec) :
@@ -997,6 +1009,7 @@ def decouverte_cliques_new(matE, dico_sommet_arete, seuil_U=10, epsilon=0.75,
                                                      matE.copy(), 
                                                      dico_ver, 
                                                      arguments_MAJ.copy())
+    logger.debug("********* Fin Couverture **********")
     return C, dico_cliq, liste_aretes_Ec,\
             ordre_noeuds_traites, dico_sommets_par_cliqs, dico_gamma_sommets; 
 #ens_C_i, dico_cliq, liste_aretes_E_C_i, min_cliques_aSupprDe_ens_C, noeuds_traites, som_cout_min;  
