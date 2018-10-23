@@ -10,6 +10,7 @@ import os
 import time
 import math
 import random
+import logging
 import pandas as pd
 import numpy as np
 import fonctions_auxiliaires as fct_aux
@@ -57,7 +58,8 @@ def creer_reseau(chemin_datasets, chemin_matrices, args):
         path_ = Path(chemin_matrices);
         path_.mkdir(parents=True, exist_ok=True);
         
-        
+    logger = logging.getLogger('creer_reseau')
+    logger.debug("creation de mat et matE")
     dico_graphe = {"a":["b"], "b":["c","d"], "c":["e","f"], 
                    "d":["f"], "e":["g"], "f":["h"], "g":[],
                    "h":[]};
@@ -84,17 +86,27 @@ def creer_reseau(chemin_datasets, chemin_matrices, args):
     arcs = fct_aux.liste_arcs(mat)
     matE = mesures.creation_matE(dico_arcs_sommets, arcs)
     matE.to_csv(chemin_matrices+"matE.csv")
+    logger.debug("mat cree : arcs={}, sommets={}, matE cree : aretes={}, ".
+                 format(len(arcs), len(dico_graphe.keys()), 
+                            fct_aux.liste_arcs(matE)))
     return matE, mat, dico_arcs_sommets;
 
 def simulation_nouveau_critere(args):
     """ simulation d'un nouveau critere de correction.
     
     """
+    logging.basicConfig(format='%(asctime)s - %(message)s', 
+                        level=logging.DEBUG,
+                        datefmt='%d-%b-%y %H:%M:%S',
+                        filename=args["log_file"],
+                        filemode="w")
+    logger = logging.getLogger('***** simulation_nouveau_critere')
     matE, mat, dico_arcs_sommets = creer_reseau(args["chemin_datasets"], 
-                                                args["chemin_matrices"], args);
-                                                
+                                                args["chemin_matrices"], args);             
+    
     
     # supprimer ou ajouter des aretes dans matE
+    logger.debug("***** Suppression et ajout aretes dans matE")
     matE_k_alpha = matE.copy()
     rd = random.random()
     dico_k_erreurs = {"aretes_ajoutees":[], "aretes_supprimees":[]}
@@ -102,10 +114,12 @@ def simulation_nouveau_critere(args):
         matE_k_alpha.loc["b_d","c_f"] = 1;
         matE_k_alpha.loc["c_f","b_d"] = 1;
         dico_k_erreurs["aretes_ajoutees"].append(("b_d","c_f"));
+        logger.debug(" * Aretes ajoutees : {}".format( ("b_d","c_f") ))
     elif args["k_erreurs"] == 1 and rd < args["p_correl"]:
         matE_k_alpha.loc["a_b","c_b"] = 0;
         matE_k_alpha.loc["c_b","a_b"] = 0;
         dico_k_erreurs["aretes_supprimees"].append(("a_b","b_c"));
+        logger.debug(" * Aretes supprimees : {}".format( ("a_b","b_c") ))
     else:
         aretes_mat = matE_k_alpha.columns.tolist()
         for _ in range(math.ceil(args["k_erreurs"] * args["p_correl"])):         # suppression d'aretes
@@ -117,7 +131,7 @@ def simulation_nouveau_critere(args):
             matE_k_alpha.loc[row,col] = 0;
             matE_k_alpha.loc[col,row] = 0;
             dico_k_erreurs["aretes_supprimees"].append((row,col));
-            
+            logger.debug(" * Aretes supprimees : ({},{})".format(row,col))
         aretes_mat = matE_k_alpha.columns.tolist()
         for _ in range(args["k_erreurs"] - math.ceil(args["k_erreurs"] * 
                                                     args["p_correl"])):         # ajout d'aretes
@@ -129,8 +143,10 @@ def simulation_nouveau_critere(args):
             matE_k_alpha.loc[row,col] = 1;
             matE_k_alpha.loc[col,row] = 1;
             dico_k_erreurs["aretes_ajoutees"].append((row,col));
+            logger.debug(" * Aretes ajoutees : ({},{})".format(row,col))
     
     # algorithme de couverture
+    logger.debug("***** Algorithme de couverture")
     C = list(); aretes_Ec = list();
     dico_cliq = dict(); dico_sommets_par_cliqs = dict();
     dico_gamma_sommets = dict()
@@ -147,10 +163,15 @@ def simulation_nouveau_critere(args):
     print("aretes_Ec={},\n C={} ,\n sommets_par_cliqs={},\n dico_k_erreurs={},\n dict_cliq={}".\
           format(len(aretes_Ec), C, dico_sommets_par_cliqs, dico_k_erreurs, 
                  dico_cliq))
-    
+    logger.debug("aretes_Ec={}".format(len(aretes_Ec)));
+    logger.debug("C={}".format(len(C))); 
+    logger.debug("sommets_par_cliques={}".format(dico_sommets_par_cliqs));
+    sommets_1 = {sommet for sommet, etat in dico_cliq if dico_cliq[sommet]==-1}
+    logger.debug("sommets_1={}".format(sommets_1))
     
     ### correction
     if len(aretes_Ec) != 0:
+        logger.debug("***** Algorithme de correction ")
         C_old = C.copy(); 
         args["C"] = C.copy();
         args["dico_sommets_par_cliqs"] = dico_sommets_par_cliqs;
@@ -160,6 +181,7 @@ def simulation_nouveau_critere(args):
         dico_solution = algoCorrection.correction_graphe_correlation(args);
         return dico_solution;
     else:
+        logger.debug("***** Pas de Correction *****")
         cout_correction = 0; noeuds_corriges = list()
         return {cout_correction:[C, dico_cliq, ordre_noeuds_traites,
                                  dico_sommets_par_cliqs, noeuds_corriges,
@@ -170,6 +192,7 @@ if __name__ == '__main__':
     
      start= time.time();
      args = {"dbg":True};
+     log_file = "DEBUG_CRITERE_C2C1.log";
      chemin_datasets = "dataTestNewCriterecorrection/datasets/";
      chemin_matrices = "dataTestNewCriterecorrection/matrices/";
      
@@ -199,7 +222,8 @@ if __name__ == '__main__':
              "mode_correction":mode_correction,
              "critere_selection_compression":critere_selection_compression,
              "chemin_datasets":chemin_datasets,
-             "chemin_matrices":chemin_matrices}
+             "chemin_matrices":chemin_matrices,
+             "log_file":log_file}
     
      # test sur couverture en cliques ===> 
      if bool_couverture:
