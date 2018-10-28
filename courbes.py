@@ -632,50 +632,127 @@ def formation_df_fct_cout_s(reps,args):
 ###     1)          distribution des k cases modifiees
 ###
 ###############################################################################
-def plot_moyDLDH_correlDlDh_cumul(df, k_error, axarr_x, col, num_bins, aretes, motif_p_s, langue):
+def plot_moyDLDH_correlDlDh_cumul(df, k_error, axarr_x, col, num_bins, aretes, 
+                                  motif_p_s, langue, titre_figure):
     if col in ["moy_dh","moy_dl"]:
         sns.distplot(df[col],ax = axarr_x, bins = range(0,int(num_bins)), kde = False)
         (mu, sigma) = norm.fit(df[col]) # best fit of data
-        if col == "moy_dh" and langue == "francais" and motif_p_s == "p":
-            axarr_x.set(xlabel= "moy_distance_hamming", ylabel= "nombre_graphe", \
-                title = "distance de Hamming pour "+ str(k_error)+\
+        if col == "moy_dh" and langue == "francais" and \
+            motif_p_s == "p" and titre_figure == "normal":
+            axarr_x.set(xlabel= "moy_distance_hamming", 
+                        ylabel= "nombre_graphe", 
+                        title = "distance de Hamming pour "+ 
+                                str(k_error)+
                 "\n cases modifiees \n $\mu=%.3f,\ \sigma=%.3f,\ $ \n $ aretes = %.3f$" \
-                %(mu, sigma, aretes))
-        elif col == "moy_dh" and langue == "francais" and motif_p_s == "s":
-            axarr_x.set(xlabel= "moy_distance_hamming", ylabel= "nombre_graphe", \
-                title = "distance de Hamming pour \n un seuil s="+ str(k_error)+\
+                                %(mu, sigma, aretes))
+        elif col == "moy_dh" and langue == "francais" and \
+            motif_p_s == "p" and titre_figure == "reduit":
+            axarr_x.set(xlabel= "moy_distance_hamming", 
+                        ylabel= "nombre_graphe", 
+                        title = "DH pour k = "+ 
+                                str(k_error)+\
+                                " cases modifiees")
+        elif col == "moy_dh" and langue == "francais" and \
+            motif_p_s == "s" and titre_figure == "normal":
+            axarr_x.set(xlabel= "moy_distance_hamming", 
+                        ylabel= "nombre_graphe", 
+                        title = "distance de Hamming pour \n un seuil s="+ 
+                                str(k_error)+
                 "\n $\mu=%.3f,\ \sigma=%.3f,\ $ \n $ aretes = %.3f$" \
-                %(mu, sigma, aretes))
-        elif col == "moy_dh" and langue == "anglais" and motif_p_s == "p":
-            axarr_x.set(xlabel= "moy_distance_hamming", ylabel= "number_graphe", \
-                title = "Hamming distance for "+ str(k_error)+\
+                                %(mu, sigma, aretes))
+        elif col == "moy_dh" and langue == "francais" and \
+            motif_p_s == "s" and titre_figure == "reduit":
+            axarr_x.set(xlabel= "moy_distance_hamming", 
+                        ylabel= "nombre_graphe", 
+                        title = "DH pour s = "+ 
+                                str(k_error))
+        elif col == "moy_dh" and langue == "anglais" and \
+            motif_p_s == "p" and titre_figure == "normal":
+            axarr_x.set(xlabel= "Hamming_distance_mean", 
+                        ylabel= "graph_number", 
+                        title = "Hamming distance for "+ 
+                                str(k_error)+
                 "\n modified cases \n $\mu=%.3f,\ \sigma=%.3f,\ $ \n $ edges = %.3f$" \
-                %(mu, sigma, aretes))
-        elif col == "moy_dh" and langue == "anglais" and motif_p_s == "s":
-            axarr_x.set(xlabel= "moy_distance_hamming", ylabel= "number_graphe", \
-                title = "Hamming distance for \n threshold s="+ str(k_error)+\
+                                %(mu, sigma, aretes))
+        elif col == "moy_dh" and langue == "anglais" and \
+            motif_p_s == "p" and titre_figure == "reduit":
+            axarr_x.set(xlabel= "Hamming_distance_mean", 
+                        ylabel= "graph_number", 
+                        title = "DH for k = "+ 
+                                str(k_error)+
+                                " modified cases")      
+        elif col == "moy_dh" and langue == "anglais" and \
+            motif_p_s == "s" and titre_figure == "normal":
+            axarr_x.set(xlabel= "Hamming_distance_mean", 
+                        ylabel= "graph_number", 
+                        title = "Hamming distance for \n threshold s="+ 
+                                str(k_error)+
                 "\n $\mu=%.3f,\ \sigma=%.3f,\ $ \n $ edges = %.3f$" \
-                %(mu, sigma, aretes))
-        elif col == "moy_dl" and langue == "francais" and motif_p_s == "p":
-            axarr_x.set(xlabel= "moy_distance_correction", ylabel= "nombre_graphe", \
-                title = "distance correction pour "+ str(k_error)+\
+                                %(mu, sigma, aretes))
+        elif col == "moy_dh" and langue == "anglais" and \
+            motif_p_s == "s" and titre_figure == "reduit":
+            axarr_x.set(xlabel= "Hamming_distance_mean", 
+                        ylabel= "graph_number", 
+                        title = "DH for s = "+ 
+                                str(k_error))    
+        elif col == "moy_dl" and langue == "francais" and \
+            motif_p_s == "p" and titre_figure == "normal":
+            axarr_x.set(xlabel= "moy_distance_correction", 
+                        ylabel= "nombre_graphe", 
+                        title = "distance correction pour "+ 
+                                str(k_error)+
                 "\n cases modifiees \n $\mu=%.3f,\ \sigma=%.3f,\ $ \n $ aretes = %.3f$" \
-                %(mu, sigma, aretes))
-        elif col == "moy_dl" and langue == "francais" and motif_p_s == "s":
-            axarr_x.set(xlabel= "moy_distance_correction", ylabel= "nombre_graphe", \
-                title = "distance correction pour \n un seuil s = "+ str(k_error)+\
+                                %(mu, sigma, aretes))
+        elif col == "moy_dl" and langue == "francais" and \
+            motif_p_s == "p" and titre_figure == "reduit":
+            axarr_x.set(xlabel= "moy_distance_correction", 
+                        ylabel= "nombre_graphe", 
+                        title = "DC pour k = "+ 
+                                str(k_error)+
+                                " cases modifiees")
+        elif col == "moy_dl" and langue == "francais" and \
+            motif_p_s == "s" and titre_figure == "normal":
+            axarr_x.set(xlabel= "moy_distance_correction", 
+                        ylabel= "nombre_graphe", 
+                        title = "distance correction pour \n un seuil s = "+ 
+                                str(k_error)+
                 "\n $\mu=%.3f,\ \sigma=%.3f,\ $ \n $ aretes = %.3f$" \
-                %(mu, sigma, aretes))
-        elif col == "moy_dl" and langue == "anglais" and motif_p_s == "p":
-            axarr_x.set(xlabel= "moy_distance_correction", ylabel= "number_graphe", \
-                title = "correction distance for "+ str(k_error)+\
+                                %(mu, sigma, aretes))
+        elif col == "moy_dl" and langue == "francais" and \
+            motif_p_s == "s" and titre_figure == "reduit":
+            axarr_x.set(xlabel= "moy_distance_correction", 
+                        ylabel= "nombre_graphe", 
+                        title = "DC pour s = "+ 
+                                str(k_error))
+        elif col == "moy_dl" and langue == "anglais" and \
+            motif_p_s == "p" and titre_figure == "normal":
+            axarr_x.set(xlabel= "correction_distance_mean", 
+                        ylabel= "graph_number", 
+                        title = "correction distance for "+ 
+                                str(k_error)+
                 "\n modified cases \n $\mu=%.3f,\ \sigma=%.3f,\ $ \n $ edges = %.3f$" \
-                %(mu, sigma, aretes))
-        elif col == "moy_dl" and langue == "anglais" and motif_p_s == "s":
-            axarr_x.set(xlabel= "moy_distance_correction", ylabel= "number_graphe", \
-                title = "correction distance for \n threshold"+ str(k_error)+\
+                                %(mu, sigma, aretes))
+        elif col == "moy_dl" and langue == "anglais" and \
+            motif_p_s == "p" and titre_figure == "reduit":
+            axarr_x.set(xlabel= "correction_distance_mean", 
+                        ylabel= "graph_number", 
+                        title = "DC for k = "+ 
+                                str(k_error)+
+                                " modified cases")
+        elif col == "moy_dl" and langue == "anglais" and \
+            motif_p_s == "s" and titre_figure == "normal":
+            axarr_x.set(xlabel= "correction_distance_mean", 
+                        ylabel= "graph_number", 
+                        title = "correction distance for \n threshold"+ 
+                                str(k_error)+
                 "\n $\mu=%.3f,\ \sigma=%.3f,\ $ \n $ edges = %.3f$" \
-                %(mu, sigma, aretes))
+                                %(mu, sigma, aretes))
+        elif col == "moy_dl" and langue == "anglais" and \
+            motif_p_s == "s" and titre_figure == "reduit":
+            axarr_x.set(xlabel= "correction_distance_mean", 
+                        ylabel= "graph_number", 
+                        title = "DC for s = "+ 
+                                str(k_error))    
         max_count_dl, max_count_dh = count_max_df(df)
         axarr_x.plot([int(k_error)+1,int(k_error)+1], (0,max_count_dl), 'r--' );
         axarr_x.plot([int(mu)+1,int(mu)+1], (0,max_count_dl), 'y--' );          # ajout droite verticale pour moyenne des distances de correction et de Hamming
@@ -685,22 +762,68 @@ def plot_moyDLDH_correlDlDh_cumul(df, k_error, axarr_x, col, num_bins, aretes, m
     elif col in ["correl_dh_dl"]:
         data_sort = df[col].sort_values(ascending = True);
         axarr_x.step(data_sort, data_sort.cumsum())
-        if langue == "francais" and motif_p_s == "p":
-            axarr_x.set(xlabel= "correlation_DC_DH", ylabel= "cumulative correlation ", \
-                title = "fonction de repartition de \ncorrelation entre moy_dc et moy_dh \n pour "+\
-                str(k_error)+" cases modifiees")
-        elif  langue == "anglais" and motif_p_s == "p":
-            axarr_x.set(xlabel= "correlation_DC_DH", ylabel= "cumulative correlation ", \
-                title = "cumulative function of \n correlations between moy_dc et moy_dh \n for "+\
-                str(k_error)+" modified cases")
-        elif langue == "francais" and motif_p_s == "s":
-            axarr_x.set(xlabel= "correlation_DC_DH", ylabel= "cumulative correlation ", \
-                title = "fonction de repartition de la \ncorrelation entre moy_dc et moy_dh \n pour "+\
-                        " un seuil s = "+ str(k_error))
-        elif langue == "anglais" and motif_p_s == "s":
-            axarr_x.set(xlabel= "correlation_DC_DH", ylabel= "cumulative correlation ", \
-                title = "cumulative function of \n correlations between moy_dl et moy_dh \n for "+\
-                        "a threshold s = "+str(k_error))
+        if langue == "francais" and motif_p_s == "p" and \
+            titre_figure == "normal":
+            axarr_x.set(xlabel= "correlation_DC_DH", 
+                        ylabel= "cumulative correlation ", 
+                        title = "fonction de repartition de \ncorrelation entre moy_dc et moy_dh \n pour "+
+                                str(k_error)+
+                                " cases modifiees")
+        elif langue == "francais" and motif_p_s == "p" and \
+            titre_figure == "reduit":
+            axarr_x.set(xlabel= "correlation_DC_DH", 
+                        ylabel= "cumulative correlation ",
+                        title = "fonction de repartition de \ncorrelation "+
+                                "entre moy_dc et moy_dh \n pour k = "+
+                                str(k_error)+" cases modifiees")
+        elif langue == "anglais" and motif_p_s == "p" and \
+            titre_figure == "normal":
+            axarr_x.set(xlabel= "correlation_DC_DH", 
+                        ylabel= "cumulative correlation ", 
+                        title = "cumulative function of \n"+
+                                " correlations between moy_dc et moy_dh \n"+
+                                "for "+
+                                str(k_error)+" modified cases")
+        elif langue == "anglais" and motif_p_s == "p" and \
+            titre_figure == "reduit":
+            axarr_x.set(xlabel= "correlation_DC_DH", 
+                        ylabel= "cumulative correlation ", 
+                        title = "cumulative function of \n"+
+                                " correlations between moy_dc et moy_dh \n"+
+                                "for k = "+
+                                str(k_error)+" modified cases")    
+        elif langue == "francais" and motif_p_s == "s" and \
+            titre_figure == "normal":
+            axarr_x.set(xlabel= "correlation_DC_DH", 
+                        ylabel= "cumulative correlation ", 
+                        title = "fonction de repartition de la \n"+
+                                "correlation entre moy_dc et moy_dh \n"+
+                                "pour "+\
+                                "un seuil s = "+ str(k_error))
+        elif langue == "francais" and motif_p_s == "s" and \
+            titre_figure == "reduit":
+            axarr_x.set(xlabel= "correlation_DC_DH", 
+                        ylabel= "cumulative correlation ", 
+                        title = "fonction de repartition de la \n"+
+                                "correlation entre moy_dc et moy_dh \n"+
+                                "pour "+\
+                                "un seuil s = "+ str(k_error))    
+        elif langue == "anglais" and motif_p_s == "s" and \
+            titre_figure == "normal":
+            axarr_x.set(xlabel= "correlation_DC_DH", 
+                        ylabel= "cumulative correlation ", 
+                        title = "cumulative function of \n"+
+                                " correlations between moy_dl et moy_dh \n"+
+                                " for "+
+                                "a threshold s = "+str(k_error))
+        elif langue == "anglais" and motif_p_s == "s" and \
+            titre_figure == "reduit":
+            axarr_x.set(xlabel= "correlation_DC_DH", 
+                        ylabel= "cumulative correlation ", 
+                        title = "cumulative function of \n"+
+                                " correlations between moy_dl et moy_dh \n"+
+                                "for "+
+                                "a threshold s = "+str(k_error))    
         axarr_x.set_yticklabels(['{:3.2f}%'.format(x*100/df["correl_dh_dl"].count()) \
                     for x in axarr_x.get_yticks()]);
         return axarr_x;
@@ -709,18 +832,60 @@ def plot_moyDLDH_correlDlDh_cumul(df, k_error, axarr_x, col, num_bins, aretes, m
         df["nb_graphe_dh<x"] = df["moy_dh"].apply( lambda x: df["moy_dh"][df.moy_dh < x].count()/df["moy_dh"].count())
 #        print("--->k={}, cumul_dh => min = {}, max = {},".format(k_error, df["nb_graphe_dh<x"].min(), df["nb_graphe_dh<x"].max()))
         axarr_x.step(df["moy_dh"],df["nb_graphe_dh<x"]);
-        if langue == "francais" and motif_p_s == "p":
-            axarr_x.set(xlabel= "DH", ylabel= "number graph moy_DH < x ", \
-                title = "cumulative moy_dh pour \n"+str(k_error)+" cases modifiees");
-        elif langue == "anglais" and motif_p_s == "p":
-            axarr_x.set(xlabel= "DH", ylabel= "number graph moy_DH < x ", \
-                title = "cumulative moy_dh for \n"+str(k_error)+"  modified cases")
-        elif langue == "francais" and motif_p_s == "s":
-            axarr_x.set(xlabel= "DH", ylabel= "number graph moy_DH < x ", \
-                title = "cumulative moy_dh pour \n un seuil s = "+str(k_error));
-        elif langue == "anglais" and motif_p_s == "s":
-            axarr_x.set(xlabel= "DH", ylabel= "number graph moy_DH < x ", \
-                title = "cumulative moy_dh for \n a threshold s = "+str(k_error))
+        if langue == "francais" and motif_p_s == "p" and \
+            titre_figure == "normal":
+            axarr_x.set(xlabel= "DH", 
+                        ylabel= "nombre de graphe moy_DH < x ", 
+                        title = "cumulative moy_dh pour \n"+
+                                str(k_error)+
+                                " cases modifiees");
+        elif langue == "francais" and motif_p_s == "p" and \
+            titre_figure == "reduit":
+            axarr_x.set(xlabel= "DH", 
+                        ylabel= "nombre de graphe moy_DH < x ", 
+                        title = "cumulative moy_dh pour \n k = "+
+                                str(k_error)+
+                                " cases modifiees");
+        elif langue == "anglais" and motif_p_s == "p" and \
+            titre_figure == "normal":
+            axarr_x.set(xlabel= "DH", 
+                        ylabel= "graph number moy_DH < x ", 
+                        title = "cumulative moy_dh for \n"+
+                                str(k_error)+
+                                " modified cases")
+        elif langue == "anglais" and motif_p_s == "p" and \
+            titre_figure == "reduit":
+            axarr_x.set(xlabel= "DH", 
+                        ylabel= "graph number moy_DH < x ", 
+                        title = "cumulative moy_dh for \n k = "+
+                                str(k_error)+
+                                " modified cases")
+        elif langue == "francais" and motif_p_s == "s" and \
+            titre_figure == "normal":
+            axarr_x.set(xlabel= "DH", 
+                        ylabel= "nombre de graphe moy_DH < x ",
+                        title = "cumulative moy_dh pour \n"+
+                                "un seuil s = "+str(k_error));
+        elif langue == "francais" and motif_p_s == "s" and \
+            titre_figure == "reduit":
+            axarr_x.set(xlabel= "DH", 
+                        ylabel= "nombre de graphe moy_DH < x ",
+                        title = "cumulative moy_dh pour \n"+
+                                "un seuil s = "+str(k_error));
+        elif langue == "anglais" and motif_p_s == "s" and \
+            titre_figure == "normal":
+            axarr_x.set(xlabel= "DH", 
+                        ylabel= "graph number moy_DH < x ", 
+                        title = "cumulative moy_dh for \n"+
+                                " a threshold s = "+
+                                str(k_error))
+        elif langue == "anglais" and motif_p_s == "s" and \
+            titre_figure == "reduit":
+            axarr_x.set(xlabel= "DH", 
+                        ylabel= "graph number moy_DH < x ", 
+                        title = "cumulative moy_dh for \n"+
+                                " a threshold s = "+
+                                str(k_error))
         axarr_x.set_xticklabels(np.arange(0, df["moy_dh"].count(), 10), rotation=45 ) 
         return axarr_x;
         
@@ -808,8 +973,10 @@ def plot_distrib_moyDl_Dh_cumulFct_k_0(args):
 def histo_cumul_fct_seaborn(params, k_errors):
     # lire dataframe aretes matE
     colonnes = ["num_graphe","sommets_matE","aretes_matE"];
-    path_save_aretes_matE = "./file_results/"; file_save_aretes_matE = "nombres_aretes_line_graphes.csv";
-    df_aretes_matE = pd.read_csv(path_save_aretes_matE+file_save_aretes_matE, names = colonnes, skiprows=[0]);
+    path_save_aretes_matE = "./file_results/"; 
+    file_save_aretes_matE = "nombres_aretes_line_graphes.csv";
+    df_aretes_matE = pd.read_csv(path_save_aretes_matE+file_save_aretes_matE, 
+                                 names = colonnes, skiprows=[0]);
     
     k_errors.sort();                                                           
     k_chunkies = chunkify(k_errors,5);
@@ -827,29 +994,67 @@ def histo_cumul_fct_seaborn(params, k_errors):
                 aretes = find_aretes(params, df_aretes_matE);
                 df = None;
                 if params["bool_p_correl"]:
-                    df = pd.read_csv(params["path_distrib"]+params["file_prefix"]+str(k)+params["ext"], \
-                             names=["cpt","moy_dl","moy_dh","nbre_aretes_matE", "correl_dh_dl"], sep=';')
+                    df = pd.read_csv(params["path_distrib"]+\
+                                     params["file_prefix"]+\
+                                     str(k)+\
+                                     params["ext"], 
+                             names=["cpt","moy_dl","moy_dh","nbre_aretes_matE",
+                                    "correl_dh_dl"], 
+                             sep=';')
                 else :
-                    df = pd.read_csv(params["path_distrib"]+params["file_prefix"]+str(k)+params["ext"], \
-                         names=["cpt","moy_dl","moy_dh","nbre_aretes_matE","correl_dh_dl",\
-                                "faux_pos_seuil","faux_neg_seuil","faux_pos_correct", "faux_neg_correct"],\
+                    df = pd.read_csv(params["path_distrib"]+\
+                                     params["file_prefix"]+\
+                                     str(k)+\
+                                     params["ext"],
+                         names=["cpt","moy_dl","moy_dh","nbre_aretes_matE",
+                                "correl_dh_dl","faux_pos_seuil",
+                                "faux_neg_seuil","faux_pos_correct", 
+                                "faux_neg_correct"],
                          sep=';')
                 # ind=0, ax = 0 --> moy_dl
-                axarr[0] = plot_moyDLDH_correlDlDh_cumul(df, k, axarr[0], \
-                                "moy_dl", df["moy_dl"].max()+1, aretes, \
-                                params["motif_p_s"], params["langue"]);
+                axarr[0] = plot_moyDLDH_correlDlDh_cumul(
+                                df, 
+                                k, 
+                                axarr[0], 
+                                "moy_dl", 
+                                df["moy_dl"].max()+1, 
+                                aretes, 
+                                params["motif_p_s"], 
+                                params["langue"], 
+                                params["titre_figure"]);
                 # ind=0, ax = 1 --> moy_dh
-                axarr[1] = plot_moyDLDH_correlDlDh_cumul(df, k, axarr[1], \
-                                "moy_dh", df["moy_dh"].max()+1, aretes, \
-                                params["motif_p_s"], params["langue"]);
+                axarr[1] = plot_moyDLDH_correlDlDh_cumul(
+                                df, 
+                                k, 
+                                axarr[1],
+                                "moy_dh", 
+                                df["moy_dh"].max()+1, 
+                                aretes,
+                                params["motif_p_s"], 
+                                params["langue"],
+                                params["titre_figure"]);
                 # ind=0, ax = 2 --> correl_dl_dh
-                axarr[2] = plot_moyDLDH_correlDlDh_cumul(df, k, axarr[2], \
-                                "correl_dh_dl", df["correl_dh_dl"].max()+1, aretes,\
-                                params["motif_p_s"], params["langue"]);
+                axarr[2] = plot_moyDLDH_correlDlDh_cumul(
+                                df, 
+                                k, 
+                                axarr[2],
+                                "correl_dh_dl", 
+                                df["correl_dh_dl"].max()+1, 
+                                aretes,
+                                params["motif_p_s"], 
+                                params["langue"],
+                                params["titre_figure"]);
                 # ind=0, ax = 3 --> cumul_dh
-                axarr[3] = plot_moyDLDH_correlDlDh_cumul(df, k, axarr[3], \
-                                "cumul_dh", df["moy_dh"].max()+1, aretes, \
-                                params["motif_p_s"], params["langue"]);
+                axarr[3] = plot_moyDLDH_correlDlDh_cumul(
+                                df, 
+                                k, 
+                                axarr[3], 
+                                "cumul_dh", 
+                                df["moy_dh"].max()+1, 
+                                aretes, 
+                                params["motif_p_s"], 
+                                params["langue"],
+                                params["titre_figure"]);
                 print("k_errors k= {} moy_dl, moy_dh, correl_dh_dl, cumul_dh termine"\
                       .format(k))
             #####
@@ -858,29 +1063,67 @@ def histo_cumul_fct_seaborn(params, k_errors):
                 aretes = find_aretes(params, df_aretes_matE);
                 df = None;
                 if params["bool_p_correl"]:
-                    df = pd.read_csv(params["path_distrib"]+params["file_prefix"]+str(k)+params["ext"], \
-                             names=["cpt","moy_dl","moy_dh","nbre_aretes_matE", "correl_dh_dl"], sep=';')
+                    df = pd.read_csv(params["path_distrib"]+\
+                                     params["file_prefix"]+\
+                                     str(k)+\
+                                     params["ext"],
+                             names=["cpt","moy_dl","moy_dh",
+                                    "nbre_aretes_matE", "correl_dh_dl"], 
+                             sep=';')
                 else :
-                    df = pd.read_csv(params["path_distrib"]+params["file_prefix"]+str(k)+params["ext"], \
-                         names=["cpt","moy_dl","moy_dh","nbre_aretes_matE","correl_dh_dl",\
-                                "faux_pos_seuil","faux_neg_seuil","faux_pos_correct", "faux_neg_correct"],\
-                         sep=';')
+                    df = pd.read_csv(params["path_distrib"]+\
+                                     params["file_prefix"]+\
+                                     str(k)+\
+                                     params["ext"], 
+                            names=["cpt","moy_dl","moy_dh",
+                                   "nbre_aretes_matE","correl_dh_dl",
+                                   "faux_pos_seuil","faux_neg_seuil",
+                                   "faux_pos_correct", "faux_neg_correct"],
+                            sep=';')
                 # ind=0, ax = 0 --> moy_dl
-                axarr[ind,0] = plot_moyDLDH_correlDlDh_cumul(df, k, axarr[ind,0], \
-                                "moy_dl", df["moy_dl"].max()+1, aretes, \
-                                params["motif_p_s"], params["langue"]);
+                axarr[ind,0] = plot_moyDLDH_correlDlDh_cumul(
+                                df, 
+                                k, 
+                                axarr[ind,0], 
+                                "moy_dl", 
+                                df["moy_dl"].max()+1, 
+                                aretes, 
+                                params["motif_p_s"], 
+                                params["langue"], 
+                                params["titre_figure"]);
                 # ind=0, ax = 1 --> moy_dh
-                axarr[ind,1] = plot_moyDLDH_correlDlDh_cumul(df, k, axarr[ind,1], \
-                                "moy_dh", df["moy_dh"].max()+1, aretes, \
-                                params["motif_p_s"], params["langue"]);
+                axarr[ind,1] = plot_moyDLDH_correlDlDh_cumul(
+                                df, 
+                                k, 
+                                axarr[ind,1], 
+                                "moy_dh", 
+                                df["moy_dh"].max()+1, 
+                                aretes, 
+                                params["motif_p_s"], 
+                                params["langue"],
+                                params["titre_figure"]);
                 # ind=0, ax = 2 --> correl_dl_dh
-                axarr[ind,2] = plot_moyDLDH_correlDlDh_cumul(df, k, axarr[ind,2], \
-                                "correl_dh_dl", df["correl_dh_dl"].max()+1, aretes,\
-                                params["motif_p_s"], params["langue"]);
+                axarr[ind,2] = plot_moyDLDH_correlDlDh_cumul(
+                                df, 
+                                k, 
+                                axarr[ind,2], 
+                                "correl_dh_dl", 
+                                df["correl_dh_dl"].max()+1, 
+                                aretes, 
+                                params["motif_p_s"], 
+                                params["langue"], 
+                                params["titre_figure"]);
                 # ind=0, ax = 3 --> cumul_dh
-                axarr[ind,3] = plot_moyDLDH_correlDlDh_cumul(df, k, axarr[ind,3], \
-                                "cumul_dh", df["moy_dh"].max()+1, aretes, \
-                                params["motif_p_s"], params["langue"]);
+                axarr[ind,3] = plot_moyDLDH_correlDlDh_cumul(
+                                df, 
+                                k, 
+                                axarr[ind,3], 
+                                "cumul_dh", 
+                                df["moy_dh"].max()+1, 
+                                aretes, 
+                                params["motif_p_s"], 
+                                params["langue"], 
+                                params["titre_figure"]);
                 print("k_errors k= {} moy_dl, moy_dh, correl_dh_dl, cumul_dh termine".format(k))
         # save axarr
         fig.tight_layout();
@@ -906,9 +1149,15 @@ def plot_distribution(distrib, rep, p_correl, motif_p_s, args):
     print("save_courbe = {}".format(save_courbe));
     path_save = Path(save_courbe); path_save.mkdir(parents=True, exist_ok=True);
     params = dict();
-    params={"save_courbe":save_courbe, "ext":args["ext"], "path_distrib":distrib,\
-            "file_prefix":args["distrib_name"], "bool_p_correl":args["bool_p_correl"],\
-            "p_correl":p_correl, "motif_p_s":motif_p_s, "langue":args["langue"]};
+    params={"save_courbe":save_courbe, "ext":args["ext"], 
+            "path_distrib":distrib,
+            "file_prefix":args["distrib_name"], 
+            "bool_p_correl":args["bool_p_correl"],
+            "titre_figure":  args["titre_figure"],
+            "p_correl":p_correl, 
+            "motif_p_s":motif_p_s, 
+            "langue":args["langue"]
+            };
     histo_cumul_fct_seaborn(params, k_errors);
     
 def distributions(reps,args):
@@ -3284,7 +3533,9 @@ if __name__ == '__main__':
     
     if bool_distribution_articleRevue :
         p_correl = 0.5;  priorisation = "unitaire"; correction = "aleatoire";
-        args["rep"] = "dataArticle/"; name_p_correl = "p"
+        args["rep"] = "dataArticle/"; name_p_correl = "p";
+        titre_figure = "reduit";                                                 # reduit : intitule tres court, normal : intitule avec la moyenne, l ecart type .... 
+        args["titre_figure"] = titre_figure;
         k_errors = [2,5,10,20]; args["langue"] = "anglais";
         distributions(reps, args);    
         
