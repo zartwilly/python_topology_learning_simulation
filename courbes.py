@@ -1984,26 +1984,41 @@ def plot_comparaison_priorisation(df, p_correl, correction, args):
 ###             * et un p_correl donnee
 ###             * et en utilisant correl_dh_dl cumule du dataframe
 ###############################################################################
-def plot_relation_moyDH_moyDL(k_errors,args, p_correl, name_p_correl, priorisation, correction):   
+def plot_relation_moyDH_moyDL(k_errors, args, p_correl, name_p_correl, 
+                              priorisation, correction):   
     fig = plt.figure(1); default_size = fig.get_size_inches()
     print("w =", default_size[0], " h = ",default_size[1])
     fig.set_size_inches( (default_size[0]*1.0, default_size[1]*1.0) )
-    fig.set_size_inches( (default_size[0]*0.4, default_size[1]*0.4) )
+#    fig.set_size_inches( (default_size[0]*0.4, default_size[1]*0.4) )
 
     styles1 = ['bs-','ro-','y^-','rs-','go-','b^-','r*-','bo-','-gD','-yp',\
-                   ':>','-.<','-v','-d','-h','--H','--,']
-    colors = ['b','r','y','b','g','b','r']
-    linestyles = ['-.','--','-',':','-','steps']; 
-    markers = ['+','x','*','>','^','<','*']
+                   ':>','-.<','-v','-d','-h','--H','--,'] 
+    linestyles = []; colors = []; markers = [];
+    if args["trait_plein_courbe"] :
+        linestyles = ['-','-','-','-','-','-'];
+        colors = ['b','r','y','g','g','b','r']; 
+        markers = ['+','+','+','+','+','+','+']
+    else:
+        linestyles = ['-.','--','-',':','-','steps'];
+        colors = ['b','r','y','b','g','b','r']; 
+        markers = ['+','x','*','>','^','<','*']
+        
     for ind_k, k in enumerate(k_errors):
         ax1 = fig.add_subplot(1,1,1);
         print("rep = {}".format(args["rep"]+"lineaire_simul50Graphes_priorite_"+\
                          priorisation+"/"+correction+"/data_"+name_p_correl+"_"+\
-                         str(p_correl)+"/distribution/"+args["distrib_name"]+str(k)+args["ext"]))
+                         str(p_correl)+"/distribution/"+\
+                         args["distrib_name"]+str(k)+args["ext"]))
         df = pd.read_csv(args["rep"]+"lineaire_simul50Graphes_priorite_"+\
-                         priorisation+"/"+correction+"/data_"+name_p_correl+"_"+\
-                         str(p_correl)+"/distribution/"+args["distrib_name"]+str(k)+args["ext"], 
-                         names=["cpt","moy_dl","moy_dh", "nbre_aretes_matE", "correl_dh_dl"], \
+                         priorisation+"/"+correction+"/data_"+\
+                         name_p_correl+"_"+\
+                         str(p_correl)+\
+                         "/distribution/"+\
+                         args["distrib_name"]+\
+                         str(k)+\
+                         args["ext"], 
+                         names=["cpt","moy_dl","moy_dh", 
+                                "nbre_aretes_matE", "correl_dh_dl"], \
                          sep=';')
         data_sort = df["correl_dh_dl"].sort_values(ascending = True);
     
@@ -3510,10 +3525,10 @@ if __name__ == '__main__':
           "langue":langue, "rep":rep};
     
     bool_distribution = False; #False #True;
-    bool_distribution_articleRevue = True; #False #True;
+    bool_distribution_articleRevue = False; #False #True;
     bool_distribution_k0 = False
     bool_relation_moyDL_moy_DH = False; #True;
-    bool_relation_moy_DC_moy_DH_articleRevue = False; #False
+    bool_relation_moy_DC_moy_DH_articleRevue = True; #False #True
     bool_formation_dataframe = False; #True; 
     bool_distribution_FN_FP = False#True; #False; #True;
     bool_bon_choix_seuil = False#True#False#True;
@@ -3582,6 +3597,7 @@ if __name__ == '__main__':
         args["rep"] = "dataArticle/"; name_p_correl = "p"
         k_errors = [2,5,7,10,15,20]; 
         k_errors = [2,5,10,20]; args["langue"] = "anglais"; 
+        args["trait_plein_courbe"] = True;
         plot_relation_moyDH_moyDL(k_errors, args, p_correl, name_p_correl, \
                                   priorisation, correction)
         
