@@ -466,7 +466,7 @@ def correction_graphe_correlation(args):
             args["dico_sommets_par_cliqs"] = dico_sol_C2_C1[
                                                 "dico_sommets_par_cliqs_new"
                                                 ]
-        return args["C"], dico_sommets_corriges;
+        return args["C"], args["dico_sommets_par_cliqs"], dico_sommets_corriges;
         
 if __name__ == '__main__':
     ti = time.time();
