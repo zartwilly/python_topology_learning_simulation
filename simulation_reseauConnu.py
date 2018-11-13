@@ -234,7 +234,8 @@ def simulation_nouveau_critere(args):
 ###############################################################################
 #               simulation de graphes en parallele --> debut
 ###############################################################################
-def simulation_parallele():
+def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets, 
+                         numero_graphe, args):
     """ simulation d'un reseau avec le nombre d erreurs 
         variant de 0 a k.
     
@@ -248,6 +249,35 @@ def simulation_parallele():
                           nombre_aretes, nombre_cliques_trouve, 
                           nombre_sommets_mat, etc 
     """
+    
+    logging.basicConfig(format='%(asctime)s - %(message)s', 
+                        level=logging.DEBUG,
+                        datefmt='%d-%b-%y %H:%M:%S',
+                        filename=args["log_file"],
+                        filemode="w")
+    logger = logging.getLogger('***** simulation_parallele_graphes_generes');
+    
+    path_datasets = Path(args["chemin_datasets"]);
+    if not path_datasets.is_dir():
+        path_datasets.mkdir(parents=True, exist_ok=True)
+        
+    path_matrices = Path(args["chemin_matrices"]);
+    if not path_matrices.is_dir():
+        path_matrices.mkdir(parents=True, exist_ok=True)
+    
+   
+    path_distribution = args["dir_base"]+ \
+                        args["critere_selection_compression"]+ "/" + \
+                        args["mode_correction"]+ "/" + \
+                        "data_p_"+str(args["p_correl"]) + \
+                        "/distribution";                                        # repertoire des distribution cree
+    path_distr = Path(path_distribution);    
+    if not path_distr.isdir() :
+        path_distr.mkdir(parents=True, exist_ok=True)
+        
+    
+    G_k = "G_"+str(args["numero_graphe"])+str(args["k"]);
+    
     
 
 ###############################################################################
@@ -295,22 +325,26 @@ if __name__ == '__main__':
      if bool_reseau:
          chemin_datasets = "dataNewCriterecorrectionGrapheConnu/datasets/";
          chemin_matrices = "dataNewCriterecorrectionGrapheConnu/matrices/";
+         dir_base = "dataNewCriterecorrectionGrapheConnu/";
          args["chemin_datasets"] = chemin_datasets;
          args["chemin_matrices"] = chemin_matrices;
+         args["dir_base"] = dir_base;
          matE, mat, dico_arcs_sommets = creer_reseau(chemin_datasets, 
                                                  chemin_matrices, args);
      else:
          chemin_datasets = "dataNewCriterecorrection/datasets/";
          chemin_matrices = "dataNewCriterecorrection/matrices/";
+         dir_base = "dataNewCriterecorrection/";
          args["chemin_datasets"] = chemin_datasets;
          args["chemin_matrices"] = chemin_matrices;
-         for nbre_graphe in range(nbre_graphes):
+         args["dir_base"] = dir_base;
+         for numero_graphe in range(nbre_graphes):
              matE, mat, dico_arcs_sommets = generer_reseau(dim_mat, nbre_lien,
                                                            chemin_datasets,
                                                            chemin_matrices, 
                                                            nbre_ts, epsilon, 
                                                            effet_joule)
-             graphes.append((matE, mat, dico_arcs_sommets))
+             graphes.append((matE, mat, dico_arcs_sommets, numero_graphe))
                                                          
      
      # test sur couverture en cliques ===> 
@@ -356,10 +390,12 @@ if __name__ == '__main__':
              matE = tupl[3][0];
              mat = tupl[3][1];
              dico_arcs_sommets = tupl[3][2];
+             numero_graphe = tupl[3][3];
              k = tupl[4]
              alpha = tupl[5]; 
              params.append( (mat, matE, k, alpha, 
-                             dico_arcs_sommets, args.copy()) );
+                             dico_arcs_sommets, numero_graphe, 
+                             args.copy()) );
              
          print("params = {}".format(len(params)))
          
