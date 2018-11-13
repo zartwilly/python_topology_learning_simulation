@@ -232,6 +232,19 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
     cpt_prod_cartesien = 0;
     dico_p1_p2_ps = dict();
     #TODO NOK: A refaire car pas de melange de solution """
+    ##################33 test combinaision de dico
+#    """
+#    dico_C1_C2_S1[(cpt, C1, C2, S1_new)] = {
+#                      "cliques_contratables":,"S1":,"clique_possible": }
+#    dico_cliques_augmentante[(cpt, clique_voisine,\
+#                             clique_dependante)] = {
+#                              "cliq":, "voisine":,
+#                              "dependante":,"sommet_z":}  
+#    """                                        
+#    for dico_c1c2s1_augm in it.islice(map(dict, it.product(dico_C1_C2_S1.items(), 
+#                                         dico_cliques_augmentante.items())),
+#                              nbre_elts_pi1_pi2):  
+    ##################33 test combinaision de dico
     for k_c1_c2_s1, val_cpt_c1_c2_s1 in dico_C1_C2_S1.items():
         for k_cpt_vois_depend, val_cpt_vois_depend in dico_cliques_augmentante.items():                                        
             cpt_prod_cartesien += 1;
