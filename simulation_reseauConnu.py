@@ -29,6 +29,17 @@ from scipy.stats import truncnorm
 from random import randint as valAleotoire
 
 
+
+def distance_hamming(aretes_matE_k_alpha,  aretes_matE_corrige):
+    """ calculer le nombre de cases modifies entre G_k_alpha et G 
+    
+    aretes_matE_corrige = {frozenset(a,b), ... }
+    """
+
+def comparer_cliques(C, C_old):
+    """ retourne les cliques differentes et identiques entre C et C_old
+    """
+    
 ###############################################################################
 #               generation graphes de flots ---> debut
 ###############################################################################  
@@ -257,15 +268,6 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         filemode="w")
     logger = logging.getLogger('***** simulation_parallele_graphes_generes');
     
-    path_datasets = Path(args["chemin_datasets"]);
-    if not path_datasets.is_dir():
-        path_datasets.mkdir(parents=True, exist_ok=True)
-        
-    path_matrices = Path(args["chemin_matrices"]);
-    if not path_matrices.is_dir():
-        path_matrices.mkdir(parents=True, exist_ok=True)
-    
-   
     path_distribution = args["dir_base"]+ \
                         args["critere_selection_compression"]+ "/" + \
                         args["mode_correction"]+ "/" + \
@@ -275,10 +277,155 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
     if not path_distr.isdir() :
         path_distr.mkdir(parents=True, exist_ok=True)
         
-    
     G_k = "G_"+str(args["numero_graphe"])+str(args["k"]);
+    aretes_init_matE = fct_aux.liste_arcs(matE.columns.tolist());
     
+    chemin_datasets = args["dir_base"]+ \
+                        args["critere_selection_compression"]+ "/" + \
+                        args["mode_correction"]+ "/" + \
+                        "data_p_"+str(args["p_correl"]) + "/" + \
+                        G_k + "/" + \
+                        args["chemin_datasets"];                                # creation repertoire chemin_datasets
+    path_datasets = Path(chemin_datasets);
+    if not path_datasets.is_dir():
+        path_datasets.mkdir(parents=True, exist_ok=True)
+                    
+    chemin_matrices = args["dir_base"]+ \
+                        args["critere_selection_compression"]+ "/" + \
+                        args["mode_correction"]+ "/" + \
+                        "data_p_"+str(args["p_correl"]) + "/" + \
+                        G_k + "/" + \
+                        args["chemin_matrices"];                                # creation repertoire chemin_matrices
+    path_matrices = Path(chemin_matrices);
+    if not path_matrices.is_dir():
+        path_matrices.mkdir(parents=True, exist_ok=True)
+        
+    matE.to_csv(chemin_matrices+"matE_generer.csv")
+    mat.to_csv(chemin_matrices+"mat_generer.csv")
+
     
+    moy_correction = 0; moy_hamming = 0; 
+    sum_correction = 0; sum_hamming = 0; correl_dc_dh = 0;
+    for alpha in args["alpha"]:
+        try :
+            print("G_k={}, k={}, alpha={}".format(G_k,k,alpha))
+            matE_k_alpha = None;
+            dico_k_erreurs = {"aretes_ajoutees":[], "aretes_supprimees":[]};
+            dico_proba_cases = dict();
+            matE_k_alpha, dico_k_erreurs, dico_proba_cases = \
+                    modification_k_cases(matE, 
+                                         args["p_correl"], 
+                                         args["k"])
+            matE_k_alpha.to_csv(chemin_matrices +
+                                "matE_" +
+                                str(k) + "_" +
+                                str(alpha) +
+                                ".csv")
+            
+            # algorithme de couverture
+            logger.debug("***** Algorithme de couverture :")
+            C = list(); aretes_Ec = list();
+            dico_cliq = dict(); dico_sommets_par_cliqs = dict();
+            dico_gamma_sommets = dict()
+            C, dico_cliq, aretes_Ec, ordre_noeuds_traites, \
+            dico_sommets_par_cliqs, dico_gamma_sommets = \
+            decouvClique.decouverte_cliques_new(matE_k_alpha, \
+                                                dico_arcs_sommets, \
+                                                args["seuil_U"], 
+                                                args["epsilon"], \
+                                                chemin_datasets, 
+                                                chemin_matrices,
+                                                args["ascendant_1"], 
+                                                args["simulation"],\
+                                                dict(),
+                                                args)
+            print("aretes_Ec={},\n C={} ,\n sommets_par_cliqs={},\n dico_k_erreurs={},\n dict_cliq={}".\
+                  format(len(aretes_Ec), C, dico_sommets_par_cliqs, dico_k_erreurs, 
+                         dico_cliq))
+            logger.debug("aretes_Ec={}".format(len(aretes_Ec)));
+            logger.debug("C={}".format(len(C))); 
+            logger.debug("sommets_par_cliques={}".format(dico_sommets_par_cliqs));
+            sommets_1 = {sommet for sommet, etat in dico_cliq if dico_cliq[sommet]==-1}
+            logger.debug("sommets_1={}".format(sommets_1))
+            
+            ### correction
+            dico_sommets_par_cliqs_new = dico_sommets_par_cliqs.copy();
+            dico_solution = dict(); 
+            args_res = dict();
+            if len(aretes_Ec) != 0:
+                logger.debug("***** Algorithme de correction ")
+                C_old = C.copy(); 
+                args["C"] = C.copy();
+                args["dico_sommets_par_cliqs"] = dico_sommets_par_cliqs;
+                args["dico_cliq"] = dico_cliq;
+                args["aretes_Ec"] = fct_aux.liste_arcs(matE_k_alpha);
+                args["dico_gamma_sommets"] = dico_gamma_sommets;
+                args_res, dico_solution = \
+                        algoCorrection.correction_graphe_correlation(args);
+            else:
+                logger.debug("***** Pas de Correction *****")
+                cout_correction = 0; noeuds_corriges = list();
+            
+            cliques_identiques_C_C_old = list();   
+            cliques_differentes_C_C_old = list();
+            dc = list();
+            dh = list();
+            if args_res:
+                dc, aretes_diff_dc = distance_hamming(
+                            fct_aux.liste_arcs(matE_k_alpha.columns.tolist()), 
+                            args["aretes_Ec"])
+                dh, aretes_diff_dh = distance_hamming(aretes_init_matE, 
+                                                      args["aretes_Ec"])
+                cliques_identiques_C_C_old, cliques_differentes_C_C_old = \
+                    comparer_cliques(args["C"], args["C_old"])
+            df_dico = dict();
+            df_dico["G_k"] = G_k; df_dico["k"] = k; df_dico["alpha"] = alpha;
+            df_dico["nbre_sommets_matE"] = nbre_sommets_matE;
+            df_dico["aretes_init_matE"] = aretes_init_matE; 
+            df_dico["aretes_ajoutees"] = dico_k_erreurs["aretes_ajoutees"]; 
+            df_dico["aretes_supprimees"] = dico_k_erreurs["aretes_supprimees"]; 
+            df_dico["aretes_matE_k_alpha"] = len(aretes_matE_k_alpha);
+            df_dico["dc"] = dc; df_dico["dh"] = dh; 
+            df_dico["C_old"] = len(C_old); 
+            df_dico["C"] = len(args["C"]);
+            df_dico["cliques_identiques_C_C_old"] = len(cliques_identiques_C_C_old);
+            df_dico["cliques_differentes_C_C_old"] = len(cliques_differentes_C_C_old); 
+            #df_dico[""] = ; df_dico[""] = ;
+            for cpt_sommet, value in dico_solution.items():
+                df_dico["etape_"+str(cpt_sommet[0])+"_sommet_1"] = \
+                                    cpt_sommet[1]
+                df_dico["etape_"+str(cpt_sommet[0])+"_sommets_corriges"] = \
+                                    len(value["sommets_corriges"])
+                                    
+                df_dico["etape_"+str(cpt_sommet[0])+"_nbre_aretes_ajoutes_p1"]=\
+                                    len(value["cout_T"]["aretes_ajoutes_p1"])
+                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_ajoutes_p1"] = \
+                                    value["cout_T"]["aretes_ajoutes_p1"]
+                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_p1"] = \
+                                list(it.combinations(value["compression_p1"],2))
+                                    
+                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_ajoutes_p2"] = \
+                                    value["cout_T"]["aretes_ajoutes_p2"]
+                df_dico["etape_"+str(cpt_sommet[0])+"_nbre_aretes_ajoutes_p2"]=\
+                                    len(value["cout_T"]["aretes_ajoutes_p2"])
+                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_p2"] = \
+                                list(it.combinations(value["compression_p2"],2))
+                                    
+                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_supprimes"] = \
+                                    value["cout_T"]["aretes_supprimes"]
+                df_dico["etape_"+str(cpt_sommet[0])+"_nbre_aretes_supprimes"] = \
+                                    len(value["cout_T"]["aretes_supprimes"])
+                                    
+                df_dico["etape_"+str(cpt_sommet[0])+"_min_c1"] = \
+                                    value["cout_T"]["min_c1"]
+                df_dico["etape_"+str(cpt_sommet[0])+"_min_c2"] = \
+                                    value["cout_T"]["min_c2"]
+                
+              # convertir df_dico en dataframe  
+        Exception as e:
+            
+            
+
 
 ###############################################################################
 #               simulation de graphes en parallele --> fin
@@ -334,9 +481,9 @@ if __name__ == '__main__':
      else:
          chemin_datasets = "dataNewCriterecorrection/datasets/";
          chemin_matrices = "dataNewCriterecorrection/matrices/";
-         dir_base = "dataNewCriterecorrection/";
          args["chemin_datasets"] = chemin_datasets;
          args["chemin_matrices"] = chemin_matrices;
+         dir_base = "dataNewCriterecorrection/";
          args["dir_base"] = dir_base;
          for numero_graphe in range(nbre_graphes):
              matE, mat, dico_arcs_sommets = generer_reseau(dim_mat, nbre_lien,
