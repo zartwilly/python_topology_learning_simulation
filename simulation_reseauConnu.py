@@ -35,6 +35,11 @@ def distance_hamming(aretes_matE_k_alpha,  aretes_matE_corrige):
     
     aretes_matE_corrige = {frozenset(a,b), ... }
     """
+    aretes_matE_k_alpha = set(map(frozenset, aretes_matE_k_alpha))
+    aretes_matE_corrige = set(map(frozenset, aretes_matE_corrige))
+    aretes_diff = aretes_matE_k_alpha.union(aretes_matE_corrige) - \
+                  aretes_matE_k_alpha.intersection(aretes_matE_corrige);
+    return len(aretes_diff), aretes_diff;
 
 def comparer_cliques(C, C_old):
     """ retourne les cliques differentes et identiques entre C et C_old
@@ -372,9 +377,9 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             dh = list();
             if args_res:
                 dc, aretes_diff_dc = distance_hamming(
-                            fct_aux.liste_arcs(matE_k_alpha.columns.tolist()), 
+                            set(fct_aux.liste_arcs(matE_k_alpha.columns.tolist())), 
                             args["aretes_Ec"])
-                dh, aretes_diff_dh = distance_hamming(aretes_init_matE, 
+                dh, aretes_diff_dh = distance_hamming(set(aretes_init_matE),
                                                       args["aretes_Ec"])
                 cliques_identiques_C_C_old, cliques_differentes_C_C_old = \
                     comparer_cliques(args["C"], args["C_old"])
