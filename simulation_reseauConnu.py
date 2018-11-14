@@ -54,7 +54,7 @@ def comparer_cliques(C, C_old):
     
     return cliques_identiques, cliques_differentes;
     
-def is_locked(filepath, df):
+def is_locked(filepath, df, G_k):
     """Checks if a file is locked by opening it in append mode.
     If no exception thrown, then the file is not locked.
     """
@@ -71,7 +71,7 @@ def is_locked(filepath, df):
                             reset_index();
             # merger df_resExec et df en gardant les index (fusionner leur index)
             df_resExec = pd.merge(df_resExec, df, on="index", how="outer");
-            df_resExec.to_csv(name_save_df, sep=',', index=False);
+            df_resExec.to_csv(filepath, sep=',', index=False);
             locked = False;
     except IOError as message:
         print("resumeExecution_{}.csv is not locked ({}).".format( \
@@ -99,10 +99,10 @@ def sauver_df_resume(df, name_save_df, G_k):
     
     temps_attente = 0.010;                                                      # attente de 10 ms
     if my_file.is_file():
-        while is_locked(filepath, df, G_k):
+        while is_locked(name_save_df, df, G_k):
             print("reseumeExecution_{} is currently in use. Waiting {} milliseconds.".\
-                  format((G_k.split("_")[2], wait_time)))
-            time.sleep(wait_time);
+                  format((G_k.split("_")[2], temps_attente)))
+            time.sleep(temps_attente);
     else:
         df.to_csv(name_save_df, sep=',', index=False);
 ###############################################################################
