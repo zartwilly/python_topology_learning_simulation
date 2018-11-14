@@ -39,12 +39,20 @@ def distance_hamming(aretes_matE_k_alpha,  aretes_matE_corrige):
     aretes_matE_corrige = set(map(frozenset, aretes_matE_corrige))
     aretes_diff = aretes_matE_k_alpha.union(aretes_matE_corrige) - \
                   aretes_matE_k_alpha.intersection(aretes_matE_corrige);
+                  
     return len(aretes_diff), aretes_diff;
 
 def comparer_cliques(C, C_old):
     """ retourne les cliques differentes et identiques entre C et C_old
     """
+    C_old = set(map(frozenset, C_old))
+    cliques_identiques = set();
+    cliques_differentes = set();
+            
+    cliques_identiques = C.intersection(C_old);
+    cliques_differentes = C.union(C_old)- C.intersection(C_old);
     
+    return cliques_identiques, cliques_differentes;
 ###############################################################################
 #               generation graphes de flots ---> debut
 ###############################################################################  
@@ -378,11 +386,11 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             if args_res:
                 dc, aretes_diff_dc = distance_hamming(
                             set(fct_aux.liste_arcs(matE_k_alpha.columns.tolist())), 
-                            args["aretes_Ec"])
+                            args_res["aretes_Ec"])
                 dh, aretes_diff_dh = distance_hamming(set(aretes_init_matE),
-                                                      args["aretes_Ec"])
+                                                      args_res["aretes_Ec"])
                 cliques_identiques_C_C_old, cliques_differentes_C_C_old = \
-                    comparer_cliques(args["C"], args["C_old"])
+                    comparer_cliques(args_res["C"], C.copy())                  # C.copy() = C_old
             df_dico = dict();
             df_dico["G_k"] = G_k; df_dico["k"] = k; df_dico["alpha"] = alpha;
             df_dico["nbre_sommets_matE"] = nbre_sommets_matE;
