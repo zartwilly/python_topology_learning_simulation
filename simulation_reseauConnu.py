@@ -151,6 +151,94 @@ def generer_reseau(dim_mat, nbre_lien,
 #               generation graphes de flots ---> fin
 ############################################################################### 
 
+###############################################################################
+#               ajoutde valeur de probabilites aux cases de matE---> debut
+###############################################################################
+
+###############################################################################
+#               ajoutde valeur de probabilites aux cases de matE---> fin
+###############################################################################
+
+###############################################################################
+#               modification de k cases de matE---> debut
+############################################################################### 
+def modifier_k_cases(matE, p_correl, k, loi_proba, val_limite_proba_1):
+    """ modification de k cases selon la proba p_correl.
+    
+    si p_correl = 0, toutes les cases sont a 1
+    si p_correl = 1, toutes les cases sont a 0
+    
+    NE PAS OUBLIER D ATTRIBUER LES VALEURS DE PROBAS POUR CHAQUE CASE DE MATE
+    """
+    
+    dico_k_erreurs = dict();
+    dico_k_erreurs["aretes_ajoutees"] = []; 
+    dico_k_erreurs["aretes_supprimees"] = [];
+    
+    cases_0 = fct_aux.liste_nonArcs(matE, 0);
+    cases_1 = fct_aux.liste_arcs(matE);
+    dico_proba_cases = dict();
+    dico_proba_cases = ajouter_probabilite(dico_proba_cases, 
+                                           cases_0, 
+                                           loi_proba,
+                                           val_limite_proba_1, 
+                                           case_a_selectionner = "0_0");
+    dico_proba_cases = ajouter_probabilite(dico_proba_cases, 
+                                           cases_1, 
+                                           loi_proba,
+                                           val_limite_proba_1,
+                                           case_a_selectionner = "1_1")                                       
+    for k_ in range(0,k):
+        proba = random.random();
+    
+        m0 = len(cases_0);
+        m1 = pow(matE.shape[0],2) - m0;
+        if proba < p_correl:
+            # case 0 -> 1
+            p0 = 1/m0;
+            bool = True;
+            while bool:
+                arete = random.choice(cases_0)
+                if random.random() > p0 and \
+                    arete not in dico_k_erreurs["aretes_ajoutees"] and \
+                    arete not in dico_k_erreurs["aretes_supprimees"] :
+                    matE.loc[arete[0], arete[1]] = 1; 
+                    matE.loc[arete[1], arete[0]] = 1;
+                    dico_k_erreurs["aretes_ajoutees"].append(arete);
+                    cases_1.append(arete);
+                    dico_proba_cases = ajouter_probabilite(dico_proba_cases, 
+                                                           [arete], 
+                                                           loi_proba,
+                                                           val_limite_proba_1,
+                                                           "0_1");
+                    bool = False;
+                    break;
+        else:
+            # case 1 -> 0
+            p1 = 1/m1;
+            bool = True;
+            while bool:
+                arete = random.choice(cases_1)
+                if random.random() > p1 and \
+                    arete not in dico_k_erreurs["aretes_ajoutees"] and \
+                    arete not in dico_k_erreurs["aretes_supprimees"]:
+                    matE.loc[arete[0], arete[1]] = 0; 
+                    matE.loc[arete[1], arete[0]] = 0;
+                    dico_k_erreurs["aretes_supprimees"].append(arete);
+                    cases_0.append(arete);
+                    dico_proba_cases = ajouter_probabilite(dico_proba_cases, 
+                                                           [arete], 
+                                                           loi_proba,
+                                                           val_limite_proba_1,
+                                                           "1_0");
+                    bool = False;
+                    break;
+    return matE, dico_k_erreurs, dico_proba_cases;    
+    pass
+
+###############################################################################
+#               modification de k cases de matE---> fin
+############################################################################### 
 
 ###############################################################################
 #               simulation nouveau critere sur un graphe connu ---> debut
@@ -328,9 +416,11 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             dico_k_erreurs = {"aretes_ajoutees":[], "aretes_supprimees":[]};
             dico_proba_cases = dict();
             matE_k_alpha, dico_k_erreurs, dico_proba_cases = \
-                    modification_k_cases(matE, 
-                                         args["p_correl"], 
-                                         args["k"])
+                    modifier_k_cases(matE, 
+                                     args["p_correl"], 
+                                     args["k"], 
+                                     args["loi_proba"], 
+                                     args["val_limite_proba_1"])
             matE_k_alpha.to_csv(chemin_matrices +
                                 "matE_" +
                                 str(k) + "_" +
@@ -500,6 +590,8 @@ if __name__ == '__main__':
      simulation = True;
      k_erreurs = 1; 
      p_correl = 0.5;
+     loi_proba = "gaussienne";
+     val_limite_proba_1 = 0.8
      number_items_pi1_pi2 = 1;
      mode_correction = "aleatoire_sans_remise";                                 # "aleatoire_sans_remise", degre_min_sans_remise, cout_min_sans_remise, aleatoire_avec_remise", degre_min_avec_remise, cout_min_avec_remise, 
      critere_selection_compression = "voisins_corriges"                         # "voisins_corriges" (C2), "nombre_aretes_corriges" (C1), "voisins_nombre_aretes_corriges" (C2 puis C1)
@@ -507,6 +599,8 @@ if __name__ == '__main__':
              "ascendant_1":ascendant_1, "simulation":simulation,
              "k_erreurs":k_erreurs, 
              "p_correl":p_correl,
+             "loi_proba": loi_proba, 
+             "val_limite_proba_1": val_limite_proba_1,
              "number_items_pi1_pi2":number_items_pi1_pi2,
              "mode_correction":mode_correction,
              "critere_selection_compression":critere_selection_compression,
