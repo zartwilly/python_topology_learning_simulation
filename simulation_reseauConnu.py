@@ -292,6 +292,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
         
     G_k = "G_"+str(args["numero_graphe"])+str(args["k"]);
     aretes_init_matE = fct_aux.liste_arcs(matE.columns.tolist());
+    nbre_sommets_matE = len(dico_arcs_sommets.keys())                           # les sommets de matE sont les arcs de mat
     
     chemin_datasets = args["dir_base"]+ \
                         args["critere_selection_compression"]+ "/" + \
@@ -377,7 +378,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         algoCorrection.correction_graphe_correlation(args);
             else:
                 logger.debug("***** Pas de Correction *****")
-                cout_correction = 0; noeuds_corriges = list();
+                cout_correction = 0;
             
             cliques_identiques_C_C_old = list();   
             cliques_differentes_C_C_old = list();
@@ -389,6 +390,8 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                             args_res["aretes_Ec"])
                 dh, aretes_diff_dh = distance_hamming(set(aretes_init_matE),
                                                       args_res["aretes_Ec"])
+                sum_correction += dc;
+                sum_hamming += dh;
                 cliques_identiques_C_C_old, cliques_differentes_C_C_old = \
                     comparer_cliques(args_res["C"], C.copy())                  # C.copy() = C_old
             df_dico = dict();
@@ -433,11 +436,36 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                                     value["cout_T"]["min_c1"]
                 df_dico["etape_"+str(cpt_sommet[0])+"_min_c2"] = \
                                     value["cout_T"]["min_c2"]
-                
-              # convertir df_dico en dataframe  
-        Exception as e:
-            
-            
+            # mettre un for pour dico_sommets_par_cliqs_new
+            for sommet, cliques in args_res["dico_sommets_par_cliqs_new"].items():
+                df_dico[str(sommet)] = len(cliques);
+            # convertir df_dico en dataframe  
+        except Exception as e:
+            df_dico["G_k"] = G_k; df_dico["k"] = k; df_dico["alpha"] = alpha;
+            df_dico["nbre_sommets_matE"] = nbre_sommets_matE;
+            df_dico["aretes_init_matE"] = aretes_init_matE; 
+            df_dico["aretes_ajoutees"] = "error";
+            df_dico["aretes_supprimees"] = "error"; 
+            df_dico["aretes_matE_k_alpha"] = "error";
+            df_dico["dc"] = "error"; df_dico["dh"] = "error"; 
+            df_dico["C_old"] = "error"; 
+            df_dico["C"] = "error";
+            df_dico["cliques_identiques_C_C_old"] = "error";
+            df_dico["cliques_differentes_C_C_old"] = "error";
+    # moyenner dist_line et hamming pour k aretes supprimes
+    moy_correction = sum_correction / alpha_max;
+    moy_hamming = sum_hamming / alpha_max;
+    if moy_hamming == 0 and moy_correction == 0:
+        correl_dc_dh = 1
+    else:
+        correl_dc_dh = abs(moy_hamming - moy_correction) / \
+                        max(moy_hamming, moy_correction)
+    
+    # ecrire dans un fichier pouvant etre lu pendant qu'il continue d'etre ecrit
+#    f = open(path_distr_chemin+"distribution_moyDistLine_moyHamming_k_"+str(k)+".txt","a")
+#    f.write(G_cpt+";"+str(k)+";"+str(moy_distline)+";"+str(moy_hamming)+";"+str(aretes_matE)+\
+#            ";"+str(correl_dl_dh)+"\n")
+#    f.close();        
 
 
 ###############################################################################
