@@ -152,11 +152,111 @@ def generer_reseau(dim_mat, nbre_lien,
 ############################################################################### 
 
 ###############################################################################
-#               ajoutde valeur de probabilites aux cases de matE---> debut
+#               ajout de valeur de probabilites aux cases de matE---> debut
 ###############################################################################
-
+def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
+    return truncnorm((low - mean) / sd, 
+                     (upp - mean) / sd, 
+                     loc=mean, scale=sd)
+    
+def loi_de_probalibilite(debut_proba, fin_proba, 
+                         nbre_correlations, correl_seuil):
+    """
+    generer des valeurs de correlations entre debut_proba et fin_proba.
+    """
+    mean = (fin_proba + debut_proba)/2; 
+    sd = abs((fin_proba - debut_proba)/(2 * 4)) \
+            if fin_proba != debut_proba else abs((fin_proba)/(2 * 4))
+    correlations  = get_truncated_normal(mean * 100, 
+                                         sd * 100, 
+                                         low = 1, 
+                                         upp = nbre_correlations * 100);
+    return np.random.choice(correlations.rvs(nbre_correlations) / 100);
+    
+def ajouter_probabilite(dico_proba_cases, cases, loi_proba, 
+                        p_correl, val_limite_proba_1, 
+                        case_a_selectionner):
+    """ ajouter  des valeurs de probabilites a chaque case de cases 
+        selon la type de cases 'case_a_selectionner' et 
+                la loi de proba 'loi_proba'.
+        
+        val_limite_proba_1 :  limite inferieure de toutes les cases a 1.
+    """
+    if loi_proba == "poisson":
+        if case_a_selectionner == "0_0":
+            for case in cases:
+                dico_proba_cases[case] = round(
+                                        random.choice(
+                                        np.union1d(np.linspace(0, 0.117, 100), \
+                                        np.linspace(0.35, 0.5, 100))),
+                                                      3)
+        elif case_a_selectionner == "1_1":
+            for case in cases:
+                debut_proba = val_limite_proba_1;                               # 0.8
+                fin_proba = 1;
+                dico_proba_cases[case] = loi_de_probalibilite(
+                                                debut_proba, 
+                                                fin_proba,
+                                                val_limite_proba_1,
+                                                nbre_correlations = 250);
+        elif case_a_selectionner == "1_0":
+            for case in cases:
+                dico_proba_cases[case] = round(
+                                        random.choice(
+                                        np.union1d(np.linspace(0.6, 0.644, 100), \
+                                        np.linspace(0.72, 0.79, 100))),
+                                                3)
+        
+        elif case_a_selectionner == "0_1":
+            for case in cases:
+                debut_proba = p_correl;
+                fin_proba = val_limite_proba_1 - 0.001;                         # 0.79
+                dico_proba_cases[case] = loi_de_probalibilite(
+                                                debut_proba, 
+                                                fin_proba,
+                                                val_limite_proba_1,
+                                                nbre_correlations = 250);
+    elif loi_proba == "gaussienne":
+        if case_a_selectionner == "0_0":
+            for case in cases:
+                debut_proba = 0;
+                fin_proba = val_limite_proba_1 - p_correl - 0.01;               # 0.3
+                dico_proba_cases[case] = loi_de_probalibilite(
+                                                debut_proba, 
+                                                fin_proba,
+                                                val_limite_proba_1,
+                                                nbre_correlations = 250);
+        elif case_a_selectionner == "1_1":
+            for case in cases:
+                debut_proba = val_limite_proba_1;                               # 0.8
+                fin_proba = 1;
+                dico_proba_cases[case] = loi_de_probalibilite(
+                                                debut_proba, 
+                                                fin_proba,
+                                                val_limite_proba_1,
+                                                nbre_correlations = 250);
+        elif case_a_selectionner == "1_0":
+            for case in cases:
+                debut_proba = val_limite_proba_1 - p_correl;                    # 0.3
+                fin_proba = p_correl;
+                dico_proba_cases[case] = loi_de_probalibilite(
+                                                debut_proba, 
+                                                fin_proba,
+                                                val_limite_proba_1,
+                                                nbre_correlations = 250);
+        
+        elif case_a_selectionner == "0_1":
+            for case in cases:
+                debut_proba = p_correl;
+                fin_proba = val_limite_proba_1 - 0.001;                         # 0.79
+                dico_proba_cases[case] = loi_de_probalibilite(
+                                                debut_proba, 
+                                                fin_proba,
+                                                val_limite_proba_1,
+                                                nbre_correlations = 250);
+    return dico_proba_cases;
 ###############################################################################
-#               ajoutde valeur de probabilites aux cases de matE---> fin
+#               ajout de valeur de probabilites aux cases de matE---> fin
 ###############################################################################
 
 ###############################################################################
@@ -181,11 +281,13 @@ def modifier_k_cases(matE, p_correl, k, loi_proba, val_limite_proba_1):
     dico_proba_cases = ajouter_probabilite(dico_proba_cases, 
                                            cases_0, 
                                            loi_proba,
+                                           p_correl,
                                            val_limite_proba_1, 
                                            case_a_selectionner = "0_0");
     dico_proba_cases = ajouter_probabilite(dico_proba_cases, 
                                            cases_1, 
                                            loi_proba,
+                                           p_correl,
                                            val_limite_proba_1,
                                            case_a_selectionner = "1_1")                                       
     for k_ in range(0,k):
@@ -209,6 +311,7 @@ def modifier_k_cases(matE, p_correl, k, loi_proba, val_limite_proba_1):
                     dico_proba_cases = ajouter_probabilite(dico_proba_cases, 
                                                            [arete], 
                                                            loi_proba,
+                                                           p_correl,
                                                            val_limite_proba_1,
                                                            "0_1");
                     bool = False;
@@ -229,6 +332,7 @@ def modifier_k_cases(matE, p_correl, k, loi_proba, val_limite_proba_1):
                     dico_proba_cases = ajouter_probabilite(dico_proba_cases, 
                                                            [arete], 
                                                            loi_proba,
+                                                           p_correl,
                                                            val_limite_proba_1,
                                                            "1_0");
                     bool = False;
