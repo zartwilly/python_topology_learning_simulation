@@ -633,7 +633,11 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             # mettre un for pour dico_sommets_par_cliqs_new
             for sommet, cliques in dico_sommets_par_cliqs_new.items():
                 df_dico[str(sommet)] = len(cliques);
-            # convertir df_dico en dataframe  
+            # TODO convertir df_dico en dataframe
+            df = pd.DataFrame.from_dict(df_dico, orient="index");
+            df.columns = [G_k];
+            # TODO save dataframe
+            
         except Exception as e:
             df_dico["G_k"] = G_k; df_dico["k"] = k; df_dico["alpha"] = alpha;
             df_dico["nbre_sommets_matE"] = nbre_sommets_matE;
