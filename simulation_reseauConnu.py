@@ -319,7 +319,8 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
 
     
     moy_correction = 0; moy_hamming = 0; 
-    sum_correction = 0; sum_hamming = 0; correl_dc_dh = 0;
+    sum_correction = 0; sum_hamming = 0; 
+    correl_dc_dh = 0;
     for alpha in args["alpha"]:
         try :
             print("G_k={}, k={}, alpha={}".format(G_k,k,alpha))
@@ -462,10 +463,17 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         max(moy_hamming, moy_correction)
     
     # ecrire dans un fichier pouvant etre lu pendant qu'il continue d'etre ecrit
-#    f = open(path_distr_chemin+"distribution_moyDistLine_moyHamming_k_"+str(k)+".txt","a")
-#    f.write(G_cpt+";"+str(k)+";"+str(moy_distline)+";"+str(moy_hamming)+";"+str(aretes_matE)+\
-#            ";"+str(correl_dl_dh)+"\n")
-#    f.close();        
+    f = open(path_distribution + 
+             "distribution_moyDistLine_moyHamming_k_" +
+             str(k) + 
+             ".txt","a")
+    f.write(G_k + ";" +\
+            str(k) + ";" + \
+            str(moy_correction) + ";" + \
+            str(moy_hamming) + ";" + \
+            str(aretes_init_matE) + ";" + \
+            str(correl_dc_dh) + "\n")
+    f.close();        
 
 
 ###############################################################################
