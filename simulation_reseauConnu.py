@@ -53,6 +53,58 @@ def comparer_cliques(C, C_old):
     cliques_differentes = C.union(C_old)- C.intersection(C_old);
     
     return cliques_identiques, cliques_differentes;
+    
+def is_locked(filepath, df):
+    """Checks if a file is locked by opening it in append mode.
+    If no exception thrown, then the file is not locked.
+    """
+    locked = None
+    file_object = None
+    
+    try:
+        print("Trying to open {} resumeExecution.".format(G_k))
+        buffer_size = 8
+        # Opening file in append mode and read the first 8 characters.
+        file_object = open(filepath, 'a', buffer_size)
+        if file_object:
+            df_resExec = pd.read_csv(filepath, sep = ",", index_col=0).\
+                            reset_index();
+            # merger df_resExec et df en gardant les index (fusionner leur index)
+            df_resExec = pd.merge(df_resExec, df, on="index", how="outer");
+            df_resExec.to_csv(name_save_df, sep=',', index=False);
+            locked = False;
+    except IOError as message:
+        print("resumeExecution_{}.csv is not locked ({}).".format( \
+                  G_k.split("_")[2], message ))
+        locked = True;
+    finally:
+        if file_object:
+            file_object.close();
+            print("resumeExecution_{}.csv  closed.".format( \
+                  G_k.split("_")[2]))
+    
+    return locked;
+    
+def sauver_df_resume(df, name_save_df, G_k):
+    """ sauvegarder le dataframe contenant la colonne G_numeroGraphe_k dans le dataframe generale 
+    resumeExecution.csv
+    
+    df : contient une seule colonne "G_numeroGrapke_k"
+    """
+    # open file
+    # verifier si ce fichier nest pas ouvert par un autre fichier
+    #   si oui attendre
+    #   sinon enregistrer.
+    my_file = Path(name_save_df);
+    
+    temps_attente = 0.010;                                                      # attente de 10 ms
+    if my_file.is_file():
+        while is_locked(filepath, df, G_k):
+            print("reseumeExecution_{} is currently in use. Waiting {} milliseconds.".\
+                  format((G_k.split("_")[2], wait_time)))
+            time.sleep(wait_time);
+    else:
+        df.to_csv(name_save_df, sep=',', index=False);
 ###############################################################################
 #               generation graphes de flots ---> debut
 ###############################################################################  
@@ -482,7 +534,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
     if not path_distr.isdir() :
         path_distr.mkdir(parents=True, exist_ok=True)
         
-    G_k = "G_"+str(args["numero_graphe"])+str(args["k"]);
+    G_k = "G_"+str(args["numero_graphe"])+"_"+str(args["k"]);
     aretes_init_matE = fct_aux.liste_arcs(matE.columns.tolist());
     nbre_sommets_matE = len(dico_arcs_sommets.keys())                           # les sommets de matE sont les arcs de mat
     
@@ -633,11 +685,19 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             # mettre un for pour dico_sommets_par_cliqs_new
             for sommet, cliques in dico_sommets_par_cliqs_new.items():
                 df_dico[str(sommet)] = len(cliques);
-            # TODO convertir df_dico en dataframe
+            # convertir df_dico en dataframe
             df = pd.DataFrame.from_dict(df_dico, orient="index");
             df.columns = [G_k];
-            # TODO save dataframe
-            
+            # save dataframe
+            name_save_df = args["dir_base"]+ \
+                            args["critere_selection_compression"]+ "/" + \
+                            args["mode_correction"]+ "/" + \
+                            "data_p_"+str(args["p_correl"]) + \
+                            "/distribution" + "/" + \
+                            "resumeExecution_"+ \
+                            str(k) + \
+                            ".csv";
+            sauver_df_resume(df, name_save_df, G_k);   
         except Exception as e:
             df_dico["G_k"] = G_k; df_dico["k"] = k; df_dico["alpha"] = alpha;
             df_dico["nbre_sommets_matE"] = nbre_sommets_matE;
