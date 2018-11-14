@@ -749,6 +749,7 @@ if __name__ == '__main__':
      bool_reseau = False;
      bool_couverture_graphe_connu = False;
      bool_simulation = False;
+     bool_parallele = False;
      bool_test_critere_correction = True;
      
      # valeurs des parametres de decouverte_cliques
@@ -857,9 +858,19 @@ if __name__ == '__main__':
          print("params = {}".format(len(params)))
          
          #parallelisation avec multiprocessing
-         p = Pool(mp.cpu_count()-1) 
-         p.starmap(simulation_parallele, params)
-         p.terminate()
+         if bool_parallele:
+             p = Pool(mp.cpu_count()-1) 
+             p.starmap(simulation_parallele, params)
+             p.terminate()
+         else:
+             arguments = params[0];
+             simulation_parallele(arguments[0],
+                                  arguments[1],
+                                  arguments[2],
+                                  arguments[3],
+                                  arguments[4],
+                                  arguments[5],
+                                  arguments[6])
          #### parallele
          
          g = open("tempsExecution_SIMULATION_k"+
