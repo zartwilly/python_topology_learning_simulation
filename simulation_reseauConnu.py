@@ -379,7 +379,6 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         algoCorrection.correction_graphe_correlation(args);
             else:
                 logger.debug("***** Pas de Correction *****")
-                cout_correction = 0;
             
             cliques_identiques_C_C_old = list();   
             cliques_differentes_C_C_old = list();
@@ -395,13 +394,13 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                 sum_hamming += dh;
                 cliques_identiques_C_C_old, cliques_differentes_C_C_old = \
                     comparer_cliques(args_res["C"], C.copy())                  # C.copy() = C_old
+                dico_sommets_par_cliqs_new = args_res["dico_sommets_par_cliqs_new"]
             df_dico = dict();
             df_dico["G_k"] = G_k; df_dico["k"] = k; df_dico["alpha"] = alpha;
             df_dico["nbre_sommets_matE"] = nbre_sommets_matE;
             df_dico["aretes_init_matE"] = aretes_init_matE; 
             df_dico["aretes_ajoutees"] = dico_k_erreurs["aretes_ajoutees"]; 
             df_dico["aretes_supprimees"] = dico_k_erreurs["aretes_supprimees"]; 
-            df_dico["aretes_matE_k_alpha"] = len(aretes_matE_k_alpha);
             df_dico["dc"] = dc; df_dico["dh"] = dh; 
             df_dico["C_old"] = len(C_old); 
             df_dico["C"] = len(args["C"]);
@@ -438,7 +437,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                 df_dico["etape_"+str(cpt_sommet[0])+"_min_c2"] = \
                                     value["cout_T"]["min_c2"]
             # mettre un for pour dico_sommets_par_cliqs_new
-            for sommet, cliques in args_res["dico_sommets_par_cliqs_new"].items():
+            for sommet, cliques in dico_sommets_par_cliqs_new.items():
                 df_dico[str(sommet)] = len(cliques);
             # convertir df_dico en dataframe  
         except Exception as e:
