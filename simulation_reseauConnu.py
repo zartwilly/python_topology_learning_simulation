@@ -523,7 +523,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         datefmt='%d-%b-%y %H:%M:%S',
                         filename=args["log_file"],
                         filemode="w")
-    logger = logging.getLogger('***** simulation_parallele_graphes_generes');
+    logger = logging.getLogger('simulation_parallele_graphes_generes');
     
     path_distribution = args["dir_base"]+ \
                         args["critere_selection_compression"]+ "/" + \
@@ -621,6 +621,10 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                 args["dico_cliq"] = dico_cliq;
                 args["aretes_Ec"] = fct_aux.liste_arcs(matE_k_alpha);
                 args["dico_gamma_sommets"] = dico_gamma_sommets;
+                args["aretes_cliques"] = [item 
+                                    for sublist in [list(it.combinations(c,2)) 
+                                                    for c in C] 
+                                    for item in sublist]
                 args_res, dico_solution = \
                         algoCorrection.correction_graphe_correlation(args);
             else:
