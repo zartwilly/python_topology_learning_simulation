@@ -265,21 +265,22 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
                                         for sommet_ps in ps)
                 # TODO OK: calcul nombre aretes a ajouter pour p1, p2, nombre sommets a corriger
                 aretes_p1 = aretes_dans_cliques(p1);
-                aretes_ajoute_p1 = aretes_differente(args["aretes_Ec"], 
+                aretes_ajoutees_p1 = aretes_differente(args["aretes_Ec"], 
                                                      aretes_p1);
                 
                 aretes_p2 = aretes_dans_cliques(p2);
-                aretes_ajoute_p2 = aretes_differente(args["aretes_Ec"], 
+                aretes_ajoutees_p2 = aretes_differente(args["aretes_Ec"], 
                                                      aretes_p2);
                 
-                aretes_Ec_new = set(args["aretes_Ec"]) + aretes_ajoute_p1 + \
-                                aretes_ajoute_p2;
+                aretes_Ec_new = set(args["aretes_Ec"]) + aretes_ajoutees_p1 + \
+                                aretes_ajoutees_p2;
                 C_new = args["C"].copy();
                 #TODO NOK: a verifier C_new les cliques retirees
-                C_new = set(C_new) - val_cpt_c1_c2_s1["cliques_contratables"][0] - \
-                val_cpt_c1_c2_s1["cliques_contratables"][1] - \
-                val_cpt_vois_depend["voisine"] - \
-                val_cpt_vois_depend["dependante"]
+                C_new = set(C_new) - \
+                        val_cpt_c1_c2_s1["cliques_contratables"][0] - \
+                        val_cpt_c1_c2_s1["cliques_contratables"][1] - \
+                        val_cpt_vois_depend["voisine"] - \
+                        val_cpt_vois_depend["dependante"]
                 
                 C_new.add( p1 );
                 C_new.add( p2 );
@@ -307,9 +308,9 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
                     "contractable2": val_cpt_c1_c2_s1["cliques_contratables"][1],
                     "S1": val_cpt_c1_c2_s1["S1"],
                     "S_z": s_z,
-                    "aretes_ajoute_p1": aretes_ajoute_p1,
-                    "aretes_ajoute_p2": aretes_ajoute_p2,
-                    "aretes_supprimes_ps": aretes_ps,
+                    "aretes_ajoutees_p1": aretes_ajoutees_p1,
+                    "aretes_ajoutees_p2": aretes_ajoutees_p2,
+                    "aretes_supprimees_ps": aretes_ps,
                     "aretes_Ec_new": aretes_Ec_new,
                     "C_new": C_new,
                     "sommets_corriges": dico_sommets_corriges,
@@ -353,9 +354,9 @@ def critere_C2_C1(dico_compression, args) :
     # definition de C1
     elif args["critere_selection_compression"] == "nombre_aretes_corriges":     # C1
         for id_sommet_sommet_z, dico_p1_p2_ps in dico_compression.items():
-            nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoute_p1"]) + \
-                                    len(dico_p1_p2_ps["aretes_ajoute_p2"]) + \
-                                    len(dico_p1_p2_ps["aretes_supprimes_ps"]);
+            nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoutees_p1"]) + \
+                                    len(dico_p1_p2_ps["aretes_ajoutees_p2"]) + \
+                                    len(dico_p1_p2_ps["aretes_supprimees_ps"]);
             min_c1 = nbre_aretes_corriges if min_c1 > nbre_aretes_corriges \
                                           else min_c1;
             if min_c1 in dico_c1_c2:
@@ -368,9 +369,9 @@ def critere_C2_C1(dico_compression, args) :
         for id_sommet_sommet_z, dico_p1_p2_ps in dico_compression.items():
             if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
                 max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
-                nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoute_p1"]) + \
-                                    len(dico_p1_p2_ps["aretes_ajoute_p2"]) + \
-                                    len(dico_p1_p2_ps["aretes_supprimes_ps"]);
+                nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoutees_p1"]) + \
+                                    len(dico_p1_p2_ps["aretes_ajoutees_p2"]) + \
+                                    len(dico_p1_p2_ps["aretes_supprimees_ps"]);
                 min_c1 = nbre_aretes_corriges if min_c1 > nbre_aretes_corriges \
                                                 else min_c1;
                 if min_c1 in dico_c1_c2:
@@ -414,7 +415,8 @@ def correction_graphe_correlation(args):
     sommets_a_corriger = list();
     sommets_a_corriger = [sommet for sommet, etat in args["dico_cliq"].items() 
                             if etat == -1]
-    if args["critere_selection_compression"] == "voisins_corriges":
+    if args["critere_selection_compression"] == "voisins_corriges" and \
+        args["mode_correction"] == "aleatoire_sans_remise":
         # correction sans remise avec le critere "nombre de voisins corriges"
         cpt_noeud = 0;
         while(sommets_a_corriger):
@@ -433,8 +435,8 @@ def correction_graphe_correlation(args):
             #        "voisine":,"dependante":,
             #        "contractable1":,"contractable2":,
             #        "S1":,"S_z":,
-            #        "aretes_ajoute_p1":,"aretes_ajoute_p2":,
-            #        "aretes_supprimes_ps":,"aretes_Ec_new":,"C_new":,
+            #        "aretes_ajoutees_p1":,"aretes_ajoutees_p2":,
+            #        "aretes_supprimees_ps":,"aretes_Ec_new":,"C_new":,
             #        "sommets_corriges":,"sommets_non_corriges":,
             #        "dico_sommets_par_cliqs_new": 
             #        }
@@ -449,9 +451,9 @@ def correction_graphe_correlation(args):
             args["C"] = C;
             args["aretes_cliques"] = aretes_dans_cliques(C);
             args["aretes_Ec"] = aretes_Ec;
-            cout_T = {"aretes_ajoutes_p1":dico_sol_C2_C1["aretes_ajoute_p1"],
-                      "aretes_ajoutes_p2":dico_sol_C2_C1["aretes_ajoute_p2"],
-                      "aretes_supprimes":dico_sol_C2_C1["aretes_supprimes_ps"],
+            cout_T = {"aretes_ajoutees_p1":dico_sol_C2_C1["aretes_ajoutees_p1"],
+                      "aretes_ajoutees_p2":dico_sol_C2_C1["aretes_ajoutees_p2"],
+                      "aretes_supprimees":dico_sol_C2_C1["aretes_supprimees_ps"],
                       "min_c1":min_c1,"max_c2":max_c2};
             cpt_noeud += 1;
             dico_sommets_corriges[(cpt_noeud, dico_sol_C2_C1["sommet_1"])] = {
@@ -468,5 +470,68 @@ def correction_graphe_correlation(args):
                                                 ]
         return args, dico_sommets_corriges;
         
+    elif args["critere_selection_compression"] == "voisins_corriges" and \
+        args["mode_correction"] == "aleatoire_avec_remise":
+         pass 
+    
+    elif args["critere_selection_compression"] == "nombre_aretes_corrigees" and \
+        args["mode_correction"] == "aleatoire_sans_remise":
+        pass
+    elif args["critere_selection_compression"] == "nombre_aretes_corrigees" and \
+        args["mode_correction"] == "aleatoire_avec_remise":
+        pass
+    elif args["critere_selection_compression"] == "voisins_nombre_aretes_corrigees" and \
+        args["mode_correction"] == "aleatoire_sans_remise":
+        pass
+    elif args["critere_selection_compression"] == "voisins_nombre_aretes_corrigees" and \
+        args["mode_correction"] == "aleatoire_avec_remise":
+        pass
+    
+    # degre min {avec, sans} remise 
+    # TODO ecrire cette condition
+    elif args["critere_selection_compression"] == "voisins_corriges" and \
+        args["mode_correction"] == "degre_min_sans_remise":
+         pass 
+    elif args["critere_selection_compression"] == "voisins_corriges" and \
+        args["mode_correction"] == "degre_min_avec_remise":
+         pass 
+    elif args["critere_selection_compression"] == "nombre_aretes_corrigees" and \
+        args["mode_correction"] == "degre_min_sans_remise":
+        pass
+    elif args["critere_selection_compression"] == "nombre_aretes_corrigees" and \
+        args["mode_correction"] == "degre_min_avec_remise":
+        pass
+    elif args["critere_selection_compression"] == "voisins_nombre_aretes_corrigees" and \
+        args["mode_correction"] == "degre_min_sans_remise":
+        pass
+    elif args["critere_selection_compression"] == "voisins_nombre_aretes_corrigees" and \
+        args["mode_correction"] == "degre_min_avec_remise":
+        pass   
+    
+    # cout min {avec, sans} remise
+    # TODO ecrire cette condition
+    elif args["critere_selection_compression"] == "voisins_corriges" and \
+        args["mode_correction"] == "cout_min_sans_remise":
+         pass 
+    elif args["critere_selection_compression"] == "voisins_corriges" and \
+        args["mode_correction"] == "cout_min_avec_remise":
+         pass 
+    elif args["critere_selection_compression"] == "nombre_aretes_corrigees" and \
+        args["mode_correction"] == "cout_min_sans_remise":
+        pass
+    elif args["critere_selection_compression"] == "nombre_aretes_corrigees" and \
+        args["mode_correction"] == "cout_min_avec_remise":
+        pass
+    elif args["critere_selection_compression"] == "voisins_nombre_aretes_corrigees" and \
+        args["mode_correction"] == "cout_min_sans_remise":
+        pass
+    elif args["critere_selection_compression"] == "voisins_nombre_aretes_corrigees" and \
+        args["mode_correction"] == "cout_min_avec_remise":
+        pass  
+    
+    else:
+        print("ERROR critere_selection_compression={},mode_correction={} dont exist".\
+              format(args["critere_selection_compression"], args["mode_correction"]))
+    
 if __name__ == '__main__':
     ti = time.time();
