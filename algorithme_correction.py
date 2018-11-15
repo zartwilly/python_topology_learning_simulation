@@ -106,7 +106,7 @@ def cliques_contractables(sommet_z, aretes_Ec, aretes_cliques, cliques_sommet_z)
     """ retourne la liste des cliques contractables autour du sommet_z. """
 
     cliq_contractables = [];
-    for c1, c2 in it.combinations(cliques_sommet_z.append({})):
+    for c1, c2 in it.combinations(cliques_sommet_z.append({}),2):
         if not c1 or not c2 :
             cliq_contractables.append((c1, c2));
         else:
