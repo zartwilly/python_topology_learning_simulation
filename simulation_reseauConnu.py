@@ -836,8 +836,8 @@ if __name__ == '__main__':
                                  "degre_min_avec_remise", 
                                  "cout_min_avec_remise"]
              criteres_selection_compression = ["voisins_corriges", 
-                                               "nombre_aretes_corriges", 
-                                               "voisins_nombre_aretes_corriges"]
+                                               "nombre_aretes_corrigees", 
+                                               "voisins_nombre_aretes_corrigees"]
              p_correls = range(p_correl_min, p_correl_max, step_range_p);                                 
          params = list();
          for tupl in it.product(p_correls, 
