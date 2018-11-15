@@ -790,8 +790,8 @@ if __name__ == '__main__':
          matE, mat, dico_arcs_sommets = creer_reseau(chemin_datasets, 
                                                  chemin_matrices, args);
      else:
-         chemin_datasets = "dataNewCriterecorrection/datasets/";
-         chemin_matrices = "dataNewCriterecorrection/matrices/";
+         chemin_datasets = "datasets/";
+         chemin_matrices = "matrices/";
          args["chemin_datasets"] = chemin_datasets;
          args["chemin_matrices"] = chemin_matrices;
          dir_base = "dataNewCriterecorrection/";
