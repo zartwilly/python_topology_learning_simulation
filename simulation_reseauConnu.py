@@ -663,17 +663,17 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                 df_dico["etape_"+str(cpt_sommet[0])+"_sommets_corriges"] = \
                                     len(value["sommets_corriges"])
                                     
-                df_dico["etape_"+str(cpt_sommet[0])+"_nbre_aretes_ajoutes_p1"]=\
-                                    len(value["cout_T"]["aretes_ajoutes_p1"])
-                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_ajoutes_p1"] = \
-                                    value["cout_T"]["aretes_ajoutes_p1"]
+                df_dico["etape_"+str(cpt_sommet[0])+"_nbre_aretes_ajoutees_p1"]=\
+                                    len(value["cout_T"]["aretes_ajoutees_p1"])
+                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_ajoutees_p1"] = \
+                                    value["cout_T"]["aretes_ajoutees_p1"]
                 df_dico["etape_"+str(cpt_sommet[0])+"_aretes_p1"] = \
                                 list(it.combinations(value["compression_p1"],2))
                                     
-                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_ajoutes_p2"] = \
-                                    value["cout_T"]["aretes_ajoutes_p2"]
-                df_dico["etape_"+str(cpt_sommet[0])+"_nbre_aretes_ajoutes_p2"]=\
-                                    len(value["cout_T"]["aretes_ajoutes_p2"])
+                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_ajoutees_p2"] = \
+                                    value["cout_T"]["aretes_ajoutees_p2"]
+                df_dico["etape_"+str(cpt_sommet[0])+"_nbre_aretes_ajoutees_p2"]=\
+                                    len(value["cout_T"]["aretes_ajoutees_p2"])
                 df_dico["etape_"+str(cpt_sommet[0])+"_aretes_p2"] = \
                                 list(it.combinations(value["compression_p2"],2))
                                     
