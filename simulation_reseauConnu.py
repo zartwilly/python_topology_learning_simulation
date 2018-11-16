@@ -494,7 +494,7 @@ def simulation_nouveau_critere(args):
         return {cout_correction:[C, dico_cliq, ordre_noeuds_traites,
                                  dico_sommets_par_cliqs, noeuds_corriges,
                                  C_old]}
-#    return matE_k_alpha                                                        # commenter a cause du type de retour.
+                                 
 ###############################################################################
 #               simulation nouveau critere sur un graphe connu ---> fin
 ############################################################################### 
@@ -746,11 +746,10 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
 if __name__ == '__main__':
     
      start= time.time();
-     args = {"dbg":True};
      log_file = "DEBUG_CRITERE_C2C1.log";
      log_simulation = "DEBUG_simulation_parallele";
      
-     bool_reseau = False;
+     bool_reseau = True; #False;
      bool_couverture_graphe_connu = False;
      bool_simulation = False;
      bool_parallele = False;
@@ -768,7 +767,7 @@ if __name__ == '__main__':
      number_items_pi1_pi2 = 1;
      mode_correction = "aleatoire_sans_remise";                                 # "aleatoire_sans_remise", degre_min_sans_remise, cout_min_sans_remise, aleatoire_avec_remise", degre_min_avec_remise, cout_min_avec_remise, 
      critere_selection_compression = "voisins_corriges"                         # "voisins_corriges" (C2), "nombre_aretes_corriges" (C1), "voisins_nombre_aretes_corriges" (C2 puis C1)
-     args = {"dbg":True, "seuil_U":seuil_U, "epsilon":epsilon, 
+     args = {"seuil_U":seuil_U, "epsilon":epsilon, 
              "ascendant_1":ascendant_1, "simulation":simulation,
              "k_erreurs":k_erreurs, 
              "p_correl":p_correl,
@@ -785,14 +784,15 @@ if __name__ == '__main__':
      nbre_graphes = 10;
      graphes = list();
      if bool_reseau:
+         args["dbg"] = True;
          chemin_datasets = "dataNewCriterecorrectionGrapheConnu/datasets/";
          chemin_matrices = "dataNewCriterecorrectionGrapheConnu/matrices/";
          dir_base = "dataNewCriterecorrectionGrapheConnu/";
          args["chemin_datasets"] = chemin_datasets;
          args["chemin_matrices"] = chemin_matrices;
          args["dir_base"] = dir_base;
-         matE, mat, dico_arcs_sommets = creer_reseau(chemin_datasets, 
-                                                 chemin_matrices, args);
+#         matE, mat, dico_arcs_sommets = creer_reseau(chemin_datasets, 
+#                                                 chemin_matrices, args);
      else:
          chemin_datasets = "datasets/";
          chemin_matrices = "matrices/";
