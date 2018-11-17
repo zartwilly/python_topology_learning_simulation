@@ -121,8 +121,19 @@ def couverture_par_sommets(C):
     dico_sommets_par_cliqs = dict();
     for cliq in C:
         for sommet in cliq:
-            dico_sommets_par_cliqs[sommet].append(cliq);
+            if sommet not in dico_sommets_par_cliqs.keys():
+                dico_sommets_par_cliqs[sommet] = [cliq];
+            else:
+                dico_sommets_par_cliqs[sommet].append(cliq);
     return dico_sommets_par_cliqs;
+    
+def aretes_dans_cliques(C):
+    """ retourne les aretes de tous les cliques. """
+    aretes_cliques = list();
+    aretes_cliques = [item for sublist in [list(it.combinations(c,2)) 
+                                            for c in C] 
+                        for item in sublist]
+    return aretes_cliques
     
 def liste_nonArcs(matE, k0):
     """
@@ -213,7 +224,7 @@ def gamma_noeud(matE, liste_aretes):
     dico = dict()
     l_noeuds = matE.columns.tolist()
     for noeud in l_noeuds:
-        ens = frozenset()
+        ens = set()
         for arc in liste_aretes:
             if noeud == arc[0]:
                 ens.add( arc[1] )
