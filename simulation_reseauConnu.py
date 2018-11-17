@@ -129,8 +129,8 @@ def creer_reseau(chemin_datasets, chemin_matrices, args):
     
     """
     if args["dbg"]:
-        chemin_datasets = "dataNewCriterecorrectionGrapheConnu/datasets/";
-        chemin_matrices = "dataNewCriterecorrectionGrapheConnu/matrices/";
+        chemin_datasets = "dataNewCritereCorrectionGrapheConnu/datasets/";
+        chemin_matrices = "dataNewCritereCorrectionGrapheConnu/matrices/";
         path_ = Path(chemin_datasets);
         path_.mkdir(parents=True, exist_ok=True);
         path_ = Path(chemin_matrices);
@@ -409,10 +409,12 @@ def simulation_nouveau_critere(args):
                         filename=args["log_file"],
                         filemode="w")
     logger = logging.getLogger('***** simulation_nouveau_critere')
+    logger.debug("#### debut simulation_nouveau_critere")  ;
+    
     matE, mat, dico_arcs_sommets = creer_reseau(args["chemin_datasets"], 
                                                 args["chemin_matrices"], args);             
     
-    
+                                                
     # supprimer ou ajouter des aretes dans matE
     logger.debug("***** Suppression et ajout aretes dans matE")
     matE_k_alpha = matE.copy()
@@ -471,20 +473,26 @@ def simulation_nouveau_critere(args):
     print("aretes_Ec={},\n C={} ,\n sommets_par_cliqs={},\n dico_k_erreurs={},\n dict_cliq={}".\
           format(len(aretes_Ec), C, dico_sommets_par_cliqs, dico_k_erreurs, 
                  dico_cliq))
-    logger.debug("aretes_Ec={}".format(len(aretes_Ec)));
-    logger.debug("C={}".format(len(C))); 
-    logger.debug("sommets_par_cliques={}".format(dico_sommets_par_cliqs));
-    sommets_1 = {sommet for sommet, etat in dico_cliq if dico_cliq[sommet]==-1}
-    logger.debug("sommets_1={}".format(sommets_1))
+    logger.debug(" * aretes_Ec={}".format(len(aretes_Ec)));
+    logger.debug(" * C={}".format(len(C))); 
+    logger.debug(" * sommets_par_cliques");
+    for sommet, cliques in dico_sommets_par_cliqs.items():
+        logger.debug(" ** {}={}".format(sommet, cliques));
+    sommets_1 = {sommet for sommet, etat in dico_cliq.items() \
+                         if dico_cliq[sommet] == -1}
+    logger.debug(" * sommets_1={}".format(sommets_1))
     
     ### correction
-    if len(aretes_Ec) != 0:
+    C_old = C.copy();
+    #TODO verifier prkoi le nombre d'aretes = 0 avec un sommet a -1.
+#    if len(aretes_Ec) != 0 :     # BIZARRE
+    if sommets_1:
         logger.debug("***** Algorithme de correction ")
-        C_old = C.copy(); 
         args["C"] = C.copy();
         args["dico_sommets_par_cliqs"] = dico_sommets_par_cliqs;
         args["dico_cliq"] = dico_cliq;
         args["aretes_Ec"] = fct_aux.liste_arcs(matE_k_alpha);
+        args["aretes_cliques"] = fct_aux.aretes_dans_cliques(C);
         args["dico_gamma_sommets"] = dico_gamma_sommets;
         dico_solution = algoCorrection.correction_graphe_correlation(args);
         return dico_solution;
@@ -524,6 +532,8 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         filename=args["log_file"],
                         filemode="w")
     logger = logging.getLogger('simulation_parallele_graphes_generes');
+    
+    logger.debug("#### debut simulation_parallele")  
     
     path_distribution = args["dir_base"]+ \
                         args["critere_selection_compression"]+ "/" + \
@@ -613,18 +623,15 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             dico_sommets_par_cliqs_new = dico_sommets_par_cliqs.copy();
             dico_solution = dict(); 
             args_res = dict();
+            C_old = C.copy();
             if len(aretes_Ec) != 0:
                 logger.debug("***** Algorithme de correction ")
-                C_old = C.copy(); 
                 args["C"] = C.copy();
                 args["dico_sommets_par_cliqs"] = dico_sommets_par_cliqs;
                 args["dico_cliq"] = dico_cliq;
                 args["aretes_Ec"] = fct_aux.liste_arcs(matE_k_alpha);
                 args["dico_gamma_sommets"] = dico_gamma_sommets;
-                args["aretes_cliques"] = [item 
-                                    for sublist in [list(it.combinations(c,2)) 
-                                                    for c in C] 
-                                    for item in sublist]
+                args["aretes_cliques"] = fct_aux.aretes_dans_cliques(C);
                 args_res, dico_solution = \
                         algoCorrection.correction_graphe_correlation(args);
             else:
@@ -750,7 +757,7 @@ if __name__ == '__main__':
      log_simulation = "DEBUG_simulation_parallele";
      
      bool_reseau = True; #False;
-     bool_couverture_graphe_connu = False;
+     bool_couverture_graphe_connu = True; #False;
      bool_simulation = False;
      bool_parallele = False;
      bool_test_critere_correction = True;
@@ -785,12 +792,14 @@ if __name__ == '__main__':
      graphes = list();
      if bool_reseau:
          args["dbg"] = True;
-         chemin_datasets = "dataNewCriterecorrectionGrapheConnu/datasets/";
-         chemin_matrices = "dataNewCriterecorrectionGrapheConnu/matrices/";
-         dir_base = "dataNewCriterecorrectionGrapheConnu/";
+         chemin_datasets = "dataNewCritereCorrectionGrapheConnu/datasets/";
+         chemin_matrices = "dataNewCritereCorrectionGrapheConnu/matrices/";
+         dir_base = "dataNewCritereCorrectionGrapheConnu/";
          args["chemin_datasets"] = chemin_datasets;
          args["chemin_matrices"] = chemin_matrices;
          args["dir_base"] = dir_base;
+         k_erreurs = 1;
+         args["k_erreurs"] = k_erreurs;
 #         matE, mat, dico_arcs_sommets = creer_reseau(chemin_datasets, 
 #                                                 chemin_matrices, args);
      else:
