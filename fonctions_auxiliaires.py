@@ -130,9 +130,17 @@ def couverture_par_sommets(C):
 def aretes_dans_cliques(C):
     """ retourne les aretes de tous les cliques. """
     aretes_cliques = list();
-    aretes_cliques = [item for sublist in [list(it.combinations(c,2)) 
+    
+    boolean_subset = False;
+    for elt in C:
+        if type(elt) == list() or type(elt) == set() or type(elt) == frozenset():
+            boolean_subset = True
+    if boolean_subset:
+        aretes_cliques = [item for sublist in [list(it.combinations(c,2)) 
                                             for c in C] 
                         for item in sublist]
+    else:
+        aretes_cliques = list(it.combinations(C,2));
     return aretes_cliques
     
 def liste_nonArcs(matE, k0):
