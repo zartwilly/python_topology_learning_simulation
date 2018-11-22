@@ -140,6 +140,7 @@ def aretes_dans_cliques(C):
                                             for c in C] 
                         for item in sublist]
     else:
+#        aretes_cliques = list(map(frozenset,it.combinations(C,2)));
         aretes_cliques = list(it.combinations(C,2));
     return aretes_cliques
     
