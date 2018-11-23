@@ -491,7 +491,7 @@ def appliquer_correction(dico_sol_C2_C1, sommets_a_corriger, args):
     aretes_Ec = list();
     aretes_Ec = dico_sol_C2_C1["aretes_Ec_new"];
     
-    id_sommets_1 = dico_sol_C2_C1["sommets_corriges"].keys();
+    id_sommets_1 = list(dico_sol_C2_C1["sommets_corriges"].keys());
     id_sommets_1.append(dico_sol_C2_C1["id_sommet_1"]);
     sommets_corriges = dico_sol_C2_C1["sommets_corriges"].values();
     sommets_a_corriger = np.delete(sommets_a_corriger, id_sommets_1).tolist();
@@ -688,11 +688,9 @@ if __name__ == '__main__':
     test_dependance_sommet = False#True;
     test_augmentation = False#True;
     test_compression_sommet = False#True #False;
-    test_critere_C2_C1 = True#False;
-    test_mise_a_jour_cliques = False;
-    test_aretes_differente = False;
-    test_appliquer_correction = False;                                          # ne sert a rien
-    test_aretes_differente = False;
+    test_critere_C2_C1 = False#True#False;
+    test_mise_a_jour_cliques = False;                                           # pas defini
+    test_appliquer_correction = True#False;                                    
     
     
     if test_cliques_sommet :
@@ -884,3 +882,24 @@ if __name__ == '__main__':
                     "dico_sommets_par_cliqs_new:{}\n".format(dico_sol_c2_c1["dico_sommets_par_cliqs_new"])
                     )
                     
+    if test_appliquer_correction:
+        id_sommet_z = 0;
+        critere_selection_compression = "voisins_corriges"; 
+        args["critere_selection_compression"] = critere_selection_compression;
+        
+        dico_compression = compression_sommet(id_sommet_z, sommet_z, 
+                                sommets_a_corriger, 
+                                cliques_sommet_z, args)
+        min_c1, max_c2, dico_sol_C2_C1 = critere_C2_C1(dico_compression, args) # C2 : nombre maximum de voisins corriges par un sommet, C1 : nombre minimum d'aretes a corriger au voisinage d'un sommet  
+        print("test_appliquer_correction:***Avant \n"+
+              "C={}".format(args["C"])+
+              "\n aretes_Ec={}".format(len(aretes_Ec))+
+              "\n sommets_a_corriger={}".format(sommets_a_corriger))
+        C, aretes_Ec, sommets_a_corriger = appliquer_correction(
+                                            dico_sol_C2_C1[0],
+                                            sommets_a_corriger,
+                                            args)
+        print("test_appliquer_correction:***Apres "+
+              "\n C={}".format(C)+
+              "\n aretes_Ec={}".format(len(aretes_Ec))+
+              "\n sommets_a_corriger={}".format(sommets_a_corriger))
