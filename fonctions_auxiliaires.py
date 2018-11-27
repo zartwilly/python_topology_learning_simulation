@@ -126,7 +126,19 @@ def couverture_par_sommets(C):
             else:
                 dico_sommets_par_cliqs[sommet].append(cliq);
     return dico_sommets_par_cliqs;
-    
+
+def rechercher_sommet(sommets_matE, sommet_pat1, sommet_pat2):
+    """ recherche le nom d un sommet de sommets_matE a partir de deux noms de 
+        sommets sommet_pat1, sommet_pat2
+    """
+    for sommet in sommets_matE:
+        pat1 = sommet.split("_")[0];
+        pat2 = sommet.split("_")[1];
+        if pat1 == sommet_pat1 and pat2 == sommet_pat2:
+            return sommet;
+        elif pat1 == sommet_pat2 and pat2 == sommet_pat1:
+            return sommet
+        
 def aretes_dans_cliques(C):
     """ retourne les aretes de tous les cliques. """
     aretes_cliques = list();
