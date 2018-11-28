@@ -526,6 +526,51 @@ def create_datasets(df_matA, dico_dual_arc_sommet, chemin_datasets, nbre_ts, eff
     liste_grandeurs = ["I12", "I23", "I31", "P", "S", "U12", "U23", "U31"]
     genererMesures_all_grandeurs(df_matA, dico_dual_arc_sommet, liste_grandeurs, chemin_datasets, nbre_ts, effet_joule)
 
+####### test generation mesures et datasets de mesures pour divers grandeurs ==> debut
+def genererMesures_all_grandeurs_new(matA, 
+                                     dico_dual_arc_sommet, 
+                                     liste_grandeurs, 
+                                     taille = 3, effet_joule = 0) :
+    '''
+        generer pour chaque noeud des series de mesures associe aux differents grandeurs,
+        puis la mettre ds un dico dont les cles sont les noms des arcs suivi de la grandeur like "XXX_U12", 
+        et l'enregistrer dans des datasets en fonctions des grandeurs like "dataset_U12"
+        
+    
+    taille : la dimension de chaque serie de mesures
+    '''
+    #effet_joule = 0 #0.2
+    dico = dict(); datasets = list();
+    for grandeur in liste_grandeurs:
+        dico[grandeur] = genererMesures_descendant(matA, dico_dual_arc_sommet, grandeur, taille, effet_joule)
+        
+        
+        df = pd.DataFrame.from_dict(dico[grandeur], orient='columns', dtype=None)
+        datasets.append((grandeur, df));
+#        df.to_csv(location+"dataset_"+grandeur+".csv", index = False) 
+    return datasets        
+
+def create_datasets_new(df_matA, 
+                        dico_dual_arc_sommet, 
+                        nbre_ts, effet_joule):
+    """
+    but :
+        generer le dataset de mesures pour chaque grandeur
+    particularite:
+        df_matA est le graphe genere aleatoirement 
+        
+    nbre_ts : nombre de time series pour chaque grandeur
+    """
+    
+    liste_grandeurs = ["I12", "I23", "I31", "P", "S", "U12", "U23", "U31"]
+    datasets = list()
+    datasets = genererMesures_all_grandeurs_new(
+                                            df_matA, 
+                                            dico_dual_arc_sommet, 
+                                            liste_grandeurs, 
+                                            nbre_ts, effet_joule)
+    return datasets;
+####### test generation mesures et datasets de mesures pour divers grandeurs ==> fin
     
 def grouper_liste(liste):
     dico = dict()

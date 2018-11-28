@@ -168,7 +168,38 @@ def creer_reseau(chemin_datasets, chemin_matrices, args):
                  format(len(arcs), len(dico_graphe.keys()), 
                             fct_aux.liste_arcs(matE)))
     return matE, mat, dico_arcs_sommets;
+
+def creer_matE(aretes_mat):
+    """ creer le line graphe a partir des aretes de mat
+    """ 
+    aretes = [ {arete[0],arete[1]} for arete in aretes_mat]
     
+    dico_arcs_sommets = dict();
+    for arete in aretes_mat:
+        dico_arcs_sommets["_".join(arete)] = arete;
+    dico_graphe = dict();
+    for tuple_arete in it.combinations(aretes, 2):
+        if tuple_arete[0].intersection(tuple_arete[1]) :
+            arete0 = "_".join(sorted(tuple_arete[0]));
+            arete1 = "_".join(sorted(tuple_arete[1]));
+            if arete0 not in dico_graphe and arete1 not in dico_graphe :
+                dico_graphe[arete0] = [arete1];
+            elif arete0 not in dico_graphe and arete1 in dico_graphe :
+                dico_graphe[arete1].append(arete0);
+            elif arete0 in dico_graphe and arete1 not in dico_graphe :
+                dico_graphe[arete0].append(arete1);
+            elif arete0 in dico_graphe and arete1 in dico_graphe :
+                dico_graphe[arete0].append(arete1);
+                
+    matE = pd.DataFrame(index = dico_graphe.keys(), 
+                        columns = dico_graphe.keys());
+    for k, vals in dico_graphe.items():
+        for v in vals:
+            matE.loc[k,v] = 1
+            matE.loc[v,k] = 1
+    matE.fillna(value=0, inplace=True);
+    return matE.astype(int), dico_arcs_sommets;
+
 def generer_reseau(dim_mat, nbre_lien,
                    chemin_datasets,
                    chemin_matrices,
@@ -187,9 +218,9 @@ def generer_reseau(dim_mat, nbre_lien,
     """
     
     #generer reseau de flots (A DETERMINER) avec mesures 
-    matA = None;
-    matA = geneMatA.genererMatriceA(dim_mat, nbre_lien)
-    matA.to_csv(chemin_matrices+"mat_generer.csv")
+    mat = None;
+    mat = geneMatA.genererMatriceA(dim_mat, nbre_lien)
+    mat.to_csv(chemin_matrices+"mat_generer.csv")
     dico_arcs_sommets = mesures.nommage_arcs( mat )
     mesures.create_datasets(mat, dico_arcs_sommets, 
                             chemin_datasets, nbre_ts, effet_joule) 
@@ -198,6 +229,50 @@ def generer_reseau(dim_mat, nbre_lien,
     arcs = fct_aux.liste_arcs(mat)
     matE = mesures.creation_matE(dico_arcs_sommets, arcs)
     matE.to_csv(chemin_matrices+"matE_generer.csv")
+    return matE, mat, dico_arcs_sommets;
+    
+def generer_reseau_new(dim_mat, nbre_lien,
+                       chemins_datasets,
+                       chemins_matrices,
+                       nbre_ts, epsilon, effet_joule):
+    """ generer un reseau de sommets = dim_mat avec ses mesures de flots.
+    
+        dim_mat : l'ordre du graphe
+        chemin_datasets : chemin pour sauvegarder les mesures de 
+                        grandeurs physiques
+        chemin_matrices : chemin pour sauvegarder les matrices de notre 
+                        reseau cad matrice d'adjacence du linegraphe (matE) 
+                        et son graphe racine (mat)
+        epsilon : 0.75
+        seuil : valeur par defaut definissant une adjacence entre 2 sommets
+        nbre_ts : nombre de time series 
+    """
+    
+    #generer reseau de flots (A DETERMINER) avec mesures 
+    mat = None;
+    mat = geneMatA.genererMatriceA(dim_mat, nbre_lien)
+    dico_arcs_sommets = mesures.nommage_arcs(mat)
+    datasets = list();
+    datasets = mesures.create_datasets_new(mat, \
+                                           dico_arcs_sommets, \
+                                           nbre_ts, effet_joule)
+    for chemin_dataset in chemins_datasets:
+        path_dataset = Path(chemin_dataset);
+        if not path_dataset.is_dir() :
+            path_dataset.mkdir(parents=True, exist_ok=True)
+        for dfs in datasets :
+            dfs[1].to_csv(chemin_dataset+"dataset_"+dfs[0]+".csv", 
+                            index = False) 
+    
+    #matrice du linegraphe du reseau de flot a determiner
+    arcs = fct_aux.liste_arcs(mat);
+    matE, dico_arcs_sommets = creer_matE(arcs)
+    for chemin_matrice in chemins_matrices:
+        path_matrice = Path(chemin_matrice);
+        if not path_matrice.is_dir() :
+            path_matrice.mkdir(parents=True, exist_ok=True)
+        matE.to_csv(chemin_matrice+"matE_generer.csv")
+        mat.to_csv(chemin_matrice+"mat_generer.csv")
     return matE, mat, dico_arcs_sommets;
 ###############################################################################
 #               generation graphes de flots ---> fin
@@ -770,9 +845,9 @@ if __name__ == '__main__':
      log_file = "DEBUG_CRITERE_C2C1.log";
      log_simulation = "DEBUG_simulation_parallele";
      
-     bool_reseau = True; #False;
-     bool_couverture_graphe_connu = True; #False;
-     bool_simulation = False;
+     bool_reseau = False; #True; #False;
+     bool_couverture_graphe_connu = False; #True; #False;
+     bool_simulation = True; #False;
      bool_parallele = False;
      bool_test_critere_correction = True;
      
@@ -803,6 +878,12 @@ if __name__ == '__main__':
      # generation reseau energetique ==>OK
      dim_mat = 5;
      nbre_graphes = 10;
+     alpha_max = 1;
+     k_min = 0; k_max = 5; step_range = 1;
+     k_range = range(k_min, k_max, step_range);
+     p_correl_max = 1; 
+     p_correl_min = 0;
+     step_range_p = 0.1;
      graphes = list();
      if bool_reseau:
          args["dbg"] = True;
@@ -817,34 +898,20 @@ if __name__ == '__main__':
 #         matE, mat, dico_arcs_sommets = creer_reseau(chemin_datasets, 
 #                                                 chemin_matrices, args);
      else:
-         chemin_datasets = "datasets/";
-         chemin_matrices = "matrices/";
-         args["chemin_datasets"] = chemin_datasets;
-         args["chemin_matrices"] = chemin_matrices;
-         dir_base = "dataNewCriterecorrection/";
-         args["dir_base"] = dir_base;
-         for numero_graphe in range(nbre_graphes):
-             matE, mat, dico_arcs_sommets = generer_reseau(dim_mat, nbre_lien,
-                                                           chemin_datasets,
-                                                           chemin_matrices, 
-                                                           nbre_ts, epsilon, 
-                                                           effet_joule)
-             graphes.append((matE, mat, dico_arcs_sommets, numero_graphe))
-                                                         
-     
-     # test sur couverture en cliques ===> 
-     if bool_couverture_graphe_connu:
-         dico_solution = simulation_nouveau_critere(args);                                           
-     
-     if bool_simulation:
-         alpha_max = 1;
-         k_min = 0; k_max = 5; step_range = 1;
-         k_range = range(k_min, k_max, step_range);
-         p_correl_max = 1;
-         p_correl_min = 0;
-         step_range_p = 0.1;
-         
-         
+#         chemin_datasets = "datasets/";
+#         chemin_matrices = "matrices/";
+#         args["chemin_datasets"] = chemin_datasets;
+#         args["chemin_matrices"] = chemin_matrices;
+#         dir_base = "dataNewCriterecorrection/";
+#         args["dir_base"] = dir_base;
+#         for numero_graphe in range(nbre_graphes):
+#             matE, mat, dico_arcs_sommets = generer_reseau(dim_mat, nbre_lien,
+#                                                           chemin_datasets,
+#                                                           chemin_matrices, 
+#                                                           nbre_ts, epsilon, 
+#                                                           effet_joule)
+#             graphes.append((matE, mat, dico_arcs_sommets, numero_graphe))
+         ##
          modes_correction = list();
          criteres_selection_compression = list();
          if bool_test_critere_correction:
@@ -861,7 +928,54 @@ if __name__ == '__main__':
              criteres_selection_compression = ["voisins_corriges", 
                                                "nombre_aretes_corrigees", 
                                                "voisins_nombre_aretes_corrigees"]
-             p_correls = range(p_correl_min, p_correl_max, step_range_p);                                 
+             p_correls = range(p_correl_min, p_correl_max, step_range_p); 
+         ##
+         dir_base = "dataNewCriterecorrection/";
+         args["dir_base"] = dir_base;
+         for mode_correction in modes_correction:
+             for critere_selection_compression in criteres_selection_compression:
+                 for numero_graphe in range(nbre_graphes):
+                    path_ = args["dir_base"]+ \
+                             args["critere_selection_compression"]+ "/" + \
+                             args["mode_correction"]+ "/";
+                    
+                    chemins_datasets = list();
+                    chemins_matrices = list();
+                    for k in k_range:
+                        for p_correl in p_correls:
+                            path_G = path_ + \
+                                     "data_p_" + str(args["p_correl"]) + "/" +\
+                                     "G_"+ str(numero_graphe) + "_"+ str(k) + "/";
+                            chemin_datasets = path_G + "chemin_datasets"+"/";
+                            chemin_matrices = path_G + "chemin_matrices"+"/";
+                             #path_Gs.append(path_G)
+                            chemins_datasets.append(chemin_datasets);
+                            chemins_matrices.append(chemin_matrices);
+                     
+                    matE, mat, dico_arcs_sommets = generer_reseau_new(
+                                                        dim_mat, 
+                                                        nbre_lien,
+                                                        chemins_datasets,
+                                                        chemins_matrices, 
+                                                        nbre_ts, epsilon, 
+                                                        effet_joule)
+                     
+                    graphes.append((matE, mat, dico_arcs_sommets, numero_graphe))
+         ##                                                                         
+        
+     
+     # test sur couverture en cliques ===> 
+     if bool_couverture_graphe_connu:
+         dico_solution = simulation_nouveau_critere(args);                                           
+     
+     if bool_simulation:
+#         alpha_max = 1;
+#         k_min = 0; k_max = 5; step_range = 1;
+#         k_range = range(k_min, k_max, step_range);
+#         p_correl_max = 1;
+#         p_correl_min = 0;
+#         step_range_p = 0.1;
+         
          params = list();
          for tupl in it.product(p_correls, 
                                 modes_correction, 
@@ -885,19 +999,19 @@ if __name__ == '__main__':
          print("params = {}".format(len(params)))
          
          #parallelisation avec multiprocessing
-         if bool_parallele:
-             p = Pool(mp.cpu_count()-1) 
-             p.starmap(simulation_parallele, params)
-             p.terminate()
-         else:
-             arguments = params[0];
-             simulation_parallele(arguments[0],
-                                  arguments[1],
-                                  arguments[2],
-                                  arguments[3],
-                                  arguments[4],
-                                  arguments[5],
-                                  arguments[6])
+#         if bool_parallele:
+#             p = Pool(mp.cpu_count()-1) 
+#             p.starmap(simulation_parallele, params)
+#             p.terminate()
+#         else:
+#             arguments = params[0];
+#             simulation_parallele(arguments[0],
+#                                  arguments[1],
+#                                  arguments[2],
+#                                  arguments[3],
+#                                  arguments[4],
+#                                  arguments[5],
+#                                  arguments[6])
          #### parallele
          
          g = open("tempsExecution_SIMULATION_k"+
