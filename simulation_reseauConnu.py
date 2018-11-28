@@ -630,11 +630,11 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         "data_p_"+str(args["p_correl"]) + \
                         "/distribution";                                        # repertoire des distribution cree
     path_distr = Path(path_distribution);    
-    if not path_distr.isdir() :
+    if not path_distr.is_dir() :
         path_distr.mkdir(parents=True, exist_ok=True)
         
-    G_k = "G_"+str(args["numero_graphe"])+"_"+str(args["k"]);
-    aretes_init_matE = fct_aux.liste_arcs(matE.columns.tolist());
+    G_k = "G_"+str(numero_graphe)+"_"+str(k);
+    aretes_init_matE = fct_aux.liste_arcs(matE);
     nbre_sommets_matE = len(dico_arcs_sommets.keys())                           # les sommets de matE sont les arcs de mat
     
     chemin_datasets = args["dir_base"]+ \
@@ -642,7 +642,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         args["mode_correction"]+ "/" + \
                         "data_p_"+str(args["p_correl"]) + "/" + \
                         G_k + "/" + \
-                        args["chemin_datasets"];                                # creation repertoire chemin_datasets
+                        "chemin_datasets";                                # creation repertoire chemin_datasets
     path_datasets = Path(chemin_datasets);
     if not path_datasets.is_dir():
         path_datasets.mkdir(parents=True, exist_ok=True)
@@ -652,7 +652,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         args["mode_correction"]+ "/" + \
                         "data_p_"+str(args["p_correl"]) + "/" + \
                         G_k + "/" + \
-                        args["chemin_matrices"];                                # creation repertoire chemin_matrices
+                        "chemin_matrices";                                # creation repertoire chemin_matrices
     path_matrices = Path(chemin_matrices);
     if not path_matrices.is_dir():
         path_matrices.mkdir(parents=True, exist_ok=True)
@@ -664,7 +664,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
     moy_correction = 0; moy_hamming = 0; 
     sum_correction = 0; sum_hamming = 0; 
     correl_dc_dh = 0;
-    for alpha in args["alpha"]:
+    for alpha_ in range(alpha):
         try :
             print("G_k={}, k={}, alpha={}".format(G_k,k,alpha))
             matE_k_alpha = None;
@@ -879,7 +879,7 @@ if __name__ == '__main__':
      dim_mat = 5;
      nbre_graphes = 10;
      alpha_max = 1;
-     k_min = 0; k_max = 5; step_range = 1;
+     k_min = 0; k_max = 2; step_range = 1;
      k_range = range(k_min, k_max, step_range);
      p_correl_max = 1; 
      p_correl_min = 0;
@@ -948,7 +948,6 @@ if __name__ == '__main__':
                                      "G_"+ str(numero_graphe) + "_"+ str(k) + "/";
                             chemin_datasets = path_G + "chemin_datasets"+"/";
                             chemin_matrices = path_G + "chemin_matrices"+"/";
-                             #path_Gs.append(path_G)
                             chemins_datasets.append(chemin_datasets);
                             chemins_matrices.append(chemin_matrices);
                      
@@ -999,19 +998,19 @@ if __name__ == '__main__':
          print("params = {}".format(len(params)))
          
          #parallelisation avec multiprocessing
-#         if bool_parallele:
-#             p = Pool(mp.cpu_count()-1) 
-#             p.starmap(simulation_parallele, params)
-#             p.terminate()
-#         else:
-#             arguments = params[0];
-#             simulation_parallele(arguments[0],
-#                                  arguments[1],
-#                                  arguments[2],
-#                                  arguments[3],
-#                                  arguments[4],
-#                                  arguments[5],
-#                                  arguments[6])
+         if bool_parallele:
+             p = Pool(mp.cpu_count()-1) 
+             p.starmap(simulation_parallele, params)
+             p.terminate()
+         else:
+             arguments = params[0];
+             simulation_parallele(arguments[0],
+                                  arguments[1],
+                                  arguments[2],
+                                  arguments[3],
+                                  arguments[4],
+                                  arguments[5],
+                                  arguments[6])
          #### parallele
          
          g = open("tempsExecution_SIMULATION_k"+
