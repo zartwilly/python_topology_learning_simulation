@@ -418,18 +418,32 @@ def simulation_nouveau_critere(args):
     # supprimer ou ajouter des aretes dans matE
     logger.debug("***** Suppression et ajout aretes dans matE")
     matE_k_alpha = matE.copy()
+    aretes_mat = matE_k_alpha.columns.tolist()
     rd = random.random()
     dico_k_erreurs = {"aretes_ajoutees":[], "aretes_supprimees":[]}
     if args["k_erreurs"] == 1 and rd >= args["p_correl"]:
-        matE_k_alpha.loc["b_d","c_f"] = 1;
-        matE_k_alpha.loc["c_f","b_d"] = 1;
-        dico_k_erreurs["aretes_ajoutees"].append(("b_d","c_f"));
-        logger.debug(" * Aretes ajoutees : {}".format( ("b_d","c_f") ))
+        try :
+            sommet1 = fct_aux.rechercher_sommet(aretes_mat, "b","d");
+            sommet2 = fct_aux.rechercher_sommet(aretes_mat, "c","f");
+            matE_k_alpha.loc[sommet1,sommet2] = 1;
+            matE_k_alpha.loc[sommet2,sommet1] = 1;
+            dico_k_erreurs["aretes_ajoutees"].append((sommet1,sommet2));
+            logger.debug(" * Aretes ajoutees : {}".format( (sommet1,sommet2) ))
+        except NameError as e:
+            logger.debug(" * Aretes ajoutees : {} PAS ajoutees".format((sommet1,sommet2)))
+            
+         
     elif args["k_erreurs"] == 1 and rd < args["p_correl"]:
-        matE_k_alpha.loc["a_b","c_b"] = 0;
-        matE_k_alpha.loc["c_b","a_b"] = 0;
-        dico_k_erreurs["aretes_supprimees"].append(("a_b","b_c"));
-        logger.debug(" * Aretes supprimees : {}".format( ("a_b","b_c") ))
+        try:
+            sommet1 = fct_aux.rechercher_sommet(aretes_mat, "a","b");
+            sommet2 = fct_aux.rechercher_sommet(aretes_mat, "b","c");
+            matE_k_alpha.loc[sommet1,sommet2] = 0;
+            matE_k_alpha.loc[sommet2,sommet1] = 0;
+            dico_k_erreurs["aretes_supprimees"].append((sommet1,sommet2));
+            logger.debug(" * Aretes supprimees : {}".format( (sommet1,sommet2) ))
+        except NameError as e:
+            logger.debug(" * Aretes supprimees : {} PAS supprimees".format((sommet1,sommet2)))
+            
     else:
         aretes_mat = matE_k_alpha.columns.tolist()
         for _ in range(math.ceil(args["k_erreurs"] * args["p_correl"])):         # suppression d'aretes
@@ -459,7 +473,7 @@ def simulation_nouveau_critere(args):
     logger.debug("***** Algorithme de couverture")
     C = list(); aretes_Ec = list();
     dico_cliq = dict(); dico_sommets_par_cliqs = dict();
-    dico_gamma_sommets = dict()
+    dico_gamma_sommets = dict();
     C, dico_cliq, aretes_Ec, ordre_noeuds_traites, \
     dico_sommets_par_cliqs, dico_gamma_sommets = \
     decouvClique.decouverte_cliques_new(matE_k_alpha, dico_arcs_sommets, \

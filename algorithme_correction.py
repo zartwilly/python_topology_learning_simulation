@@ -94,7 +94,7 @@ def cliques_sommet(sommet_z, dico_sommets_par_cliqs):
     else:
         cliques = list();
         for cliq in dico_sommets_par_cliqs[sommet_z]:
-            if len(cliq) > 2:
+            if len(cliq) >= 2:
                 cliques.append(cliq);
         return cliques;
 
@@ -104,6 +104,7 @@ def S_sommet(sommet_z, gamma_z, aretes_Ec, C, aretes_cliques):
         * {v, sommet_z} de aretes_Ec n'est couverte par aucune clique de C.
         
     """
+    logger = logging.getLogger('S_sommet');
     S_z = list();
     for voisin_z in gamma_z :
         if {voisin_z, sommet_z} in C :
@@ -113,6 +114,7 @@ def S_sommet(sommet_z, gamma_z, aretes_Ec, C, aretes_cliques):
             ((voisin_z, sommet_z) not in aretes_cliques and \
             (sommet_z, voisin_z) not in aretes_cliques):
             S_z.append(voisin_z);
+    logger.debug(" * S_z: {}".format(S_z))
     return S_z;
     
 def is_contractable_old(clique1, clique2, aretes_Ec, aretes_cliques):
@@ -160,7 +162,8 @@ def is_contractable(clique1, clique2, aretes_Ec, aretes_cliques, C):
 def cliques_contractables(sommet_z, aretes_Ec, 
                           aretes_cliques, cliques_sommet_z, C):
     """ retourne la liste des cliques contractables autour du sommet_z. """
-
+    
+    logger = logging.getLogger('cliques_contractables');
     cliq_contractables = [];
     """
     TODO a poser la question a un forum.
@@ -184,14 +187,17 @@ def cliques_contractables(sommet_z, aretes_Ec,
             cliq_contractables.append((c1, c2, cliques_suppl_contractables))
     for c in cliques_sommet_z:
         cliq_contractables.append((c,frozenset(), set()))
+        
+    logger.debug(" * cliq_contractables: {}".format( len(cliq_contractables)) )
     return cliq_contractables;            
     
 def voisine_sommet(sommet_z, cliques_sommet_z, cliques_not_sommet_z, s_z) :
     """ cliques voisines du sommet_z. """
 #    cliques_sommet_z = [frozenset(c) for c in cliques_sommet_z]
-    
+    logger = logging.getLogger('voisine_sommet');
     cliques_voisines = [c for c in cliques_not_sommet_z 
                         if len(c.intersection(set(s_z))) >=1]
+    logger.debug(" * voisine_sommet: {}".format(len(cliques_voisines)))
     return cliques_voisines;
 
 def dependance_sommet(sommet_z, gamma_z, cliques_sommet_z, clique_voisine):
@@ -202,6 +208,7 @@ def dependance_sommet(sommet_z, gamma_z, cliques_sommet_z, clique_voisine):
 def augmentation(sommet_z, gamma_z, cliques_sommet_z, s_z, args):
     """ retourne les augmentations possibles autour du sommet sommet_z. """
     
+    logger = logging.getLogger('augmentation');
     # cliques_sommet_z = cliques_sommet(sommet_z, args["dico_sommets_par_cliqs"]);
     cpt = 0;
     dico_cliques_augmentante = dict();
@@ -216,8 +223,8 @@ def augmentation(sommet_z, gamma_z, cliques_sommet_z, s_z, args):
         cliques_dependante = dependance_sommet(sommet_z, gamma_z, \
                                                  cliques_sommet_z, \
                                                  clique_voisine)
-        print("!!!clique_voisine={},\n cliques_dependante={}".\
-              format(clique_voisine,cliques_dependante))
+#        print("!!!clique_voisine={},\n cliques_dependante={}".\
+#              format(clique_voisine,cliques_dependante))
         if not cliques_dependante:
 #                dico_cliques_augmentante[cpt] = {"cliq":cliq, 
 #                                                "voisine":clique_voisine,
@@ -248,7 +255,8 @@ def augmentation(sommet_z, gamma_z, cliques_sommet_z, s_z, args):
                             frozenset(cliques_suppl_contractables),
                         "sommet_z":sommet_z}                        
                     cpt += 1;
-    print("??? dico_cliques_augmentante={}".format(dico_cliques_augmentante));
+#    print("??? dico_cliques_augmentante={}".format(dico_cliques_augmentante));
+    logger.debug(" * augmentation: {}".format(len(dico_cliques_augmentante)))
     return dico_cliques_augmentante;              
 
 def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger, 
@@ -264,6 +272,7 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
         * ps est un ensemble de sommets u tel que (z,u) doit etre supprime de aretes_Ec
         
     """
+    logger = logging.getLogger('compression_sommet');
 #    print("X cliques_sommet_z={}".format(cliques_sommet_z))
     s_z = S_sommet(sommet_z, 
                    args["dico_gamma_sommets"][sommet_z][1], 
@@ -281,36 +290,47 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
         S1 = C1.union(C2) - C1.union(C2).intersection(s_z);
         bool_sommet_a_exclu = True; S1_new = frozenset();
         for sommet_S1 in S1:
-            for s1_, c1_c2 in it.product(frozenset(sommet_S1), C1.union(C2)):
+            for s1_, c1_c2 in it.product(frozenset({sommet_S1}), C1.union(C2)):
                 if frozenset({s1_, c1_c2}) not in args["C"]:
                     bool_sommet_a_exclu = False;
                     break;
             if bool_sommet_a_exclu :
-                S1_new.union(set(s1_))
+                S1_new.union({s1_})
         dico_C1_C2_S1[(cpt, C1, C2, S1_new)] = {
                       "cliques_contratables":(C1,C2),
                       "cliques_suppl_contractables":cliques_suppl_contractables,
                       "S1":S1,
                       "clique_possible": 
-                          C1.union(C2.union(S1_new.union(frozenset(sommet_z))))
+                          C1.union(C2.union(S1_new.union(frozenset({sommet_z}))))
                                             }
         cpt += 1;
     
     # determination de pi1_pi2_ps
     dico_cliques_augmentante = dict();
-    print("XX cliques_sommet_z={}".format(cliques_sommet_z))
     dico_cliques_augmentante = augmentation(
                                     sommet_z,
                                     args["dico_gamma_sommets"][sommet_z][1], 
                                     cliques_sommet_z.copy(), 
                                     s_z, 
                                     args);
-    nb_prod_cartesien = pow(len(dico_C1_C2_S1), len(dico_cliques_augmentante))
+    nb_prod_cartesien = pow(len(dico_C1_C2_S1), len(dico_cliques_augmentante)) \
+                        if len(dico_C1_C2_S1) >= len(dico_cliques_augmentante) \
+                        else pow(len(dico_cliques_augmentante),len(dico_C1_C2_S1))
     nbre_elts_pi1_pi2 = math.ceil( nb_prod_cartesien * 
                                   args["number_items_pi1_pi2"])
     cpt_prod_cartesien = 0;
     dico_p1_p2_ps = dict();
-    print("nbre_elts_pi1_pi2:{}".format(nbre_elts_pi1_pi2))
+    print(" sommet_z ={}, ".format(sommet_z)+\
+          " nbre_elts_pi1_pi2:{}, ".format(nbre_elts_pi1_pi2) + \
+          " dico_C1_C2_S1:{}, ".format(len(dico_C1_C2_S1)) + \
+          " dico_cliques_augmentante:{}, ".format(len(dico_cliques_augmentante)) + \
+          " nbre_elts_pi1_pi2:{}".format(nbre_elts_pi1_pi2))
+    logger.debug(" * compression_sommet : "+\
+                 " sommet_z ={}, ".format(sommet_z)+\
+                 " nbre_elts_pi1_pi2:{}, ".format(nbre_elts_pi1_pi2)+ \
+                 " dico_C1_C2_S1:{}, ".format(len(dico_C1_C2_S1)) + \
+                 " dico_cliques_augmentante:{}, ".format(len(dico_cliques_augmentante)) + \
+                 " nbre_elts_pi1_pi2:{}".format(nbre_elts_pi1_pi2))
     #TODO NOK: A refaire car pas de melange de solution """
     ##################33 test combinaision de dico
 #    """
@@ -325,108 +345,292 @@ def compression_sommet(id_sommet_z, sommet_z, sommets_a_corriger,
 #                                         dico_cliques_augmentante.items())),
 #                              nbre_elts_pi1_pi2):  
     ##################33 test combinaision de dico
-    for k_c1_c2_s1, val_cpt_c1_c2_s1 in dico_C1_C2_S1.items():
-        for k_cpt_vois_depend, val_cpt_vois_depend in dico_cliques_augmentante.items():                                        
-            cpt_prod_cartesien += 1;
-            
-            inter_p1_p2 = val_cpt_c1_c2_s1["clique_possible"].intersection(
-                            k_cpt_vois_depend[1].union(k_cpt_vois_depend[2])
-                            )
-            if len(inter_p1_p2) <= 1 and inter_p1_p2 == frozenset(sommet_z):
+    if not dico_C1_C2_S1 and not dico_cliques_augmentante :
+        logger.debug(" * compression_sommet : *** dico_C1_C2_S1, "+\
+                         "dico_cliques_augmentante VIDE ")
+        dico_sommets_non_corriges = dict();
+        dico_sommets_corriges = dict();
+        for id_sommet_1, sommet_1 in enumerate(sommets_a_corriger):
+            dico_sommets_non_corriges[id_sommet_1] = sommet_1;
                 
-                p1 = val_cpt_c1_c2_s1["clique_possible"];
-                p2 = val_cpt_vois_depend["voisine"].union(
-                            val_cpt_vois_depend["dependante"].union(
-                            frozenset(sommet_z)))
-                gamma_z = args["dico_gamma_sommets"][sommet_z][1];
-                ps = gamma_z - p1.intersection(gamma_z).union(
-                                p2.intersection(gamma_z));
-                aretes_ps = set( frozenset((sommet_z, sommet_ps)) 
-                                        for sommet_ps in ps)
-                # TODO OK: calcul nombre aretes a ajouter pour p1, p2, nombre sommets a corriger
-                aretes_p1 = fct_aux.aretes_dans_cliques(p1);
-                aretes_ajoutees_p1 = aretes_differente(args["aretes_Ec"], 
-                                                     aretes_p1);
-                
-                aretes_p2 = fct_aux.aretes_dans_cliques(p2);
-                aretes_ajoutees_p2 = aretes_differente(args["aretes_Ec"], 
-                                                     aretes_p2);
-                                                    
-                aretes_Ec_new = set(args["aretes_Ec"]).union(
-                                aretes_ajoutees_p1.union(aretes_ajoutees_p2));
-                
-                C_new = set(args["C"].copy());
-                #TODO NOK: a verifier C_new les cliques retirees
-                ens_cliq_a_supprimer = set();
-                ens_cliq_a_supprimer.add(val_cpt_c1_c2_s1["cliques_contratables"][0]);
-                ens_cliq_a_supprimer.add(val_cpt_c1_c2_s1["cliques_contratables"][1]);
-                ens_cliq_a_supprimer.add(val_cpt_vois_depend["voisine"]);
-                ens_cliq_a_supprimer.add(val_cpt_vois_depend["dependante"]);
-                for cliq in [item for subitem in [val_cpt_c1_c2_s1["cliques_suppl_contractables"], 
-                             val_cpt_vois_depend["cliques_suppl_contractables"]] \
-                             for item in subitem]:
-                    ens_cliq_a_supprimer.add(cliq);
-                C_new.difference_update(ens_cliq_a_supprimer);
-                
-                C_new.add( p1 );
-                C_new.add( p2 );
-                print("C_new={}".format(C_new))
-                dico_sommets_corriges = dict();
-                dico_sommets_non_corriges = dict();
-                dico_sommets_par_cliqs_new = dict();
-                C_new, aretes_Ec,\
-                dico_sommets_corriges, \
-                dico_sommets_non_corriges, \
-                dico_sommets_par_cliqs_new = \
-                    mise_a_jour_aretes_cliques(C_new.copy(), aretes_Ec_new.copy(), 
-                                        aretes_ps,\
-                                        sommets_a_corriger.copy(), \
-                                        args["dico_sommets_par_cliqs"].copy())
-                ##
-#                print("!!!!C_new={},\n".format(C_new)+ 
-#                      "dico_sommets_corriges={}, \n".format(dico_sommets_corriges)+
-#                      "dico_sommets_non_corriges={}, \n".format(dico_sommets_non_corriges)+
-#                      "dico_sommets_par_cliqs_new={},\n".format(dico_sommets_par_cliqs_new)+
-#                      " aretes_ps={}".format(aretes_ps))
-                ##
-                dico_p1_p2_ps[cpt_prod_cartesien] = {
+        dico_p1_p2_ps[cpt_prod_cartesien] = {
                     "id_sommet_1": id_sommet_z,
                     "sommet_1": sommet_z,
-                    "p1": val_cpt_c1_c2_s1["clique_possible"],
-                    "p2": val_cpt_vois_depend["voisine"].union(
-                            val_cpt_vois_depend["dependante"].union(
-                            frozenset(sommet_z))),
-                    "ps": ps,
-                    "voisine": val_cpt_vois_depend["voisine"],
-                    "dependante": val_cpt_vois_depend["dependante"],
-                    "contractable1": val_cpt_c1_c2_s1["cliques_contratables"][0],
-                    "contractable2": val_cpt_c1_c2_s1["cliques_contratables"][1],
-                    "S1": val_cpt_c1_c2_s1["S1"],
+                    "p1": frozenset(),
+                    "p2": frozenset(),
+                    "ps": frozenset(),
+                    "voisine": frozenset(),
+                    "dependante": frozenset(),
+                    "contractable1": frozenset(),
+                    "contractable2": frozenset(),
+                    "S1": frozenset(),
                     "S_z": s_z,
-                    "aretes_ajoutees_p1": aretes_ajoutees_p1,
-                    "aretes_ajoutees_p2": aretes_ajoutees_p2,
-                    "aretes_supprimees_ps": aretes_ps,
-                    "aretes_Ec_new": aretes_Ec_new,
-                    "C_new": C_new,
+                    "aretes_ajoutees_p1": frozenset(),
+                    "aretes_ajoutees_p2": frozenset(),
+                    "aretes_supprimees_ps": frozenset(),
+                    "aretes_Ec_new": args["aretes_Ec"],
+                    "C_new": args["C"],
                     "sommets_corriges": dico_sommets_corriges,
                     "sommets_non_corriges": dico_sommets_non_corriges,
-                    "dico_sommets_par_cliqs_new": dico_sommets_par_cliqs_new
-                    }
+                    "dico_sommets_par_cliqs_new": args["dico_sommets_par_cliqs"]
+                        }
+    elif not dico_C1_C2_S1 and dico_cliques_augmentante :
+        logger.debug(" * compression_sommet : *** dico_C1_C2_S1 VIDE, "+\
+                         "dico_cliques_augmentante NON VIDE ")
+        for k_cpt_vois_depend, val_cpt_vois_depend in dico_cliques_augmentante.items():
+            cpt_prod_cartesien += 1;
+            p1 = val_cpt_vois_depend["voisine"].union(
+                                val_cpt_vois_depend["dependante"].union(
+                                frozenset({sommet_z})));
+            p2 = frozenset();
+            gamma_z = args["dico_gamma_sommets"][sommet_z][1];
+            ps = gamma_z - p1.intersection(gamma_z);
+            aretes_ps = set( frozenset((sommet_z, sommet_ps)) 
+                             for sommet_ps in ps)
+            aretes_p1 = fct_aux.aretes_dans_cliques(p1);
+            aretes_ajoutees_p1 = aretes_differente(args["aretes_Ec"], 
+                                                   aretes_p1);
+            aretes_Ec_new = set(args["aretes_Ec"]).union(aretes_ajoutees_p1);
+            
+            C_new = set(args["C"].copy());
+            ens_cliq_a_supprimer = set();
+            ens_cliq_a_supprimer.add(val_cpt_vois_depend["voisine"]);
+            ens_cliq_a_supprimer.add(val_cpt_vois_depend["dependante"]);
+            for cliq in val_cpt_vois_depend["cliques_suppl_contractables"] : 
+                ens_cliq_a_supprimer.add(cliq);
+            C_new.difference_update(ens_cliq_a_supprimer);
+            
+            C_new.add( p1 );
+            dico_sommets_corriges = dict();
+            dico_sommets_non_corriges = dict();
+            dico_sommets_par_cliqs_new = dict();
+            C_new, aretes_Ec,\
+            dico_sommets_corriges, \
+            dico_sommets_non_corriges, \
+            dico_sommets_par_cliqs_new = \
+                mise_a_jour_aretes_cliques(C_new.copy(), aretes_Ec_new.copy(), 
+                                    aretes_ps,\
+                                    sommets_a_corriger.copy(), \
+                                    args["dico_sommets_par_cliqs"].copy())
+            dico_p1_p2_ps[cpt_prod_cartesien] = {
+                        "id_sommet_1": id_sommet_z,
+                        "sommet_1": sommet_z,
+                        "p1": p1,
+                        "p2": p2,
+                        "ps": ps,
+                        "voisine": val_cpt_vois_depend["voisine"],
+                        "dependante": val_cpt_vois_depend["dependante"],
+                        "contractable1": frozenset(),
+                        "contractable2": frozenset(),
+                        "S1": frozenset(),
+                        "S_z": s_z,
+                        "aretes_ajoutees_p1": aretes_ajoutees_p1,
+                        "aretes_ajoutees_p2": list(),
+                        "aretes_supprimees_ps": aretes_ps,
+                        "aretes_Ec_new": aretes_Ec_new,
+                        "C_new": C_new,
+                        "sommets_corriges": dico_sommets_corriges,
+                        "sommets_non_corriges": dico_sommets_non_corriges,
+                        "dico_sommets_par_cliqs_new": dico_sommets_par_cliqs_new
+                        }
+    elif dico_C1_C2_S1 and not dico_cliques_augmentante :
+        logger.debug(" * compression_sommet : *** dico_C1_C2_S1 NON VIDE, "+\
+                         "dico_cliques_augmentante VIDE ")
+        for k_c1_c2_s1, val_cpt_c1_c2_s1 in dico_C1_C2_S1.items():
+            cpt_prod_cartesien += 1;
+            p1 = val_cpt_c1_c2_s1["clique_possible"];
+            p2 = frozenset();
+            gamma_z = args["dico_gamma_sommets"][sommet_z][1];
+            ps = gamma_z - p1.intersection(gamma_z);
+            aretes_ps = set( frozenset((sommet_z, sommet_ps)) 
+                                    for sommet_ps in ps)
+            aretes_p1 = fct_aux.aretes_dans_cliques(p1);
+            aretes_ajoutees_p1 = aretes_differente(args["aretes_Ec"], 
+                                                 aretes_p1);
+            
+            aretes_p2 = fct_aux.aretes_dans_cliques(p2);
+            aretes_ajoutees_p2 = aretes_differente(args["aretes_Ec"], 
+                                                 aretes_p2);
+                                                
+            aretes_Ec_new = set(args["aretes_Ec"]).union(
+                            aretes_ajoutees_p1.union(aretes_ajoutees_p2));
+            
+            C_new = set(args["C"].copy());
+            #TODO OK: a verifier C_new les cliques retirees
+            ens_cliq_a_supprimer = set();
+            ens_cliq_a_supprimer.add(val_cpt_c1_c2_s1["cliques_contratables"][0]);
+            ens_cliq_a_supprimer.add(val_cpt_c1_c2_s1["cliques_contratables"][1]);
+            for cliq in val_cpt_c1_c2_s1["cliques_suppl_contractables"] :
+                ens_cliq_a_supprimer.add(cliq);
+            C_new.difference_update(ens_cliq_a_supprimer);
+            
+            C_new.add( p1 );
+            dico_sommets_corriges = dict();
+            dico_sommets_non_corriges = dict();
+            dico_sommets_par_cliqs_new = dict();
+            C_new, aretes_Ec,\
+            dico_sommets_corriges, \
+            dico_sommets_non_corriges, \
+            dico_sommets_par_cliqs_new = \
+                mise_a_jour_aretes_cliques(C_new.copy(), aretes_Ec_new.copy(), 
+                                    aretes_ps,\
+                                    sommets_a_corriger.copy(), \
+                                    args["dico_sommets_par_cliqs"].copy())
+            dico_p1_p2_ps[cpt_prod_cartesien] = {
+                        "id_sommet_1": id_sommet_z,
+                        "sommet_1": sommet_z,
+                        "p1": val_cpt_c1_c2_s1["clique_possible"],
+                        "p2": frozenset(),
+                        "ps": ps,
+                        "voisine": frozenset(),
+                        "dependante": frozenset(),
+                        "contractable1": val_cpt_c1_c2_s1["cliques_contratables"][0],
+                        "contractable2": val_cpt_c1_c2_s1["cliques_contratables"][1],
+                        "S1": val_cpt_c1_c2_s1["S1"],
+                        "S_z": s_z,
+                        "aretes_ajoutees_p1": aretes_ajoutees_p1,
+                        "aretes_ajoutees_p2": aretes_ajoutees_p2,
+                        "aretes_supprimees_ps": aretes_ps,
+                        "aretes_Ec_new": aretes_Ec_new,
+                        "C_new": C_new,
+                        "sommets_corriges": dico_sommets_corriges,
+                        "sommets_non_corriges": dico_sommets_non_corriges,
+                        "dico_sommets_par_cliqs_new": dico_sommets_par_cliqs_new
+                        }
+    else:
+        logger.debug(" * compression_sommet : *** dico_C1_C2_S1, "+\
+                         "dico_cliques_augmentante NON VIDE ")
+        for k_c1_c2_s1, val_cpt_c1_c2_s1 in dico_C1_C2_S1.items():
+            for k_cpt_vois_depend, val_cpt_vois_depend in dico_cliques_augmentante.items():                                        
+                cpt_prod_cartesien += 1;
+                
+                inter_p1_p2 = val_cpt_c1_c2_s1["clique_possible"].intersection(
+                                k_cpt_vois_depend[1].union(k_cpt_vois_depend[2])
+                                )
+                logger.debug(" * compression_sommet : *** "+\
+                             "cpt_prod_cart={},".format(cpt_prod_cartesien)+\
+                             "inter_p1_p2={},".format(len(inter_p1_p2)))
+                print(" ***{} inter_p1_p2={},".format(cpt_prod_cartesien,inter_p1_p2)+\
+                      "cliq_possible={}".format(val_cpt_c1_c2_s1["clique_possible"])+\
+                      "vois_dep={}".format(k_cpt_vois_depend[1].union(k_cpt_vois_depend[2])
+                      ))
+                if len(inter_p1_p2) <= 1 and inter_p1_p2 == frozenset({sommet_z}):
+                    
+                    p1 = val_cpt_c1_c2_s1["clique_possible"];
+                    p2 = val_cpt_vois_depend["voisine"].union(
+                                val_cpt_vois_depend["dependante"].union(
+                                frozenset({sommet_z})))
+                    gamma_z = args["dico_gamma_sommets"][sommet_z][1];
+                    ps = gamma_z - p1.intersection(gamma_z).union(
+                                    p2.intersection(gamma_z));
+                    aretes_ps = set( frozenset((sommet_z, sommet_ps)) 
+                                            for sommet_ps in ps)
+                    # TODO OK: calcul nombre aretes a ajouter pour p1, p2, nombre sommets a corriger
+                    aretes_p1 = fct_aux.aretes_dans_cliques(p1);
+                    aretes_ajoutees_p1 = aretes_differente(args["aretes_Ec"], 
+                                                         aretes_p1);
+                    
+                    aretes_p2 = fct_aux.aretes_dans_cliques(p2);
+                    aretes_ajoutees_p2 = aretes_differente(args["aretes_Ec"], 
+                                                         aretes_p2);
+                                                        
+                    aretes_Ec_new = set(args["aretes_Ec"]).union(
+                                    aretes_ajoutees_p1.union(aretes_ajoutees_p2));
+                    
+                    C_new = set(args["C"].copy());
+                    #TODO OK: a verifier C_new les cliques retirees
+                    ens_cliq_a_supprimer = set();
+                    ens_cliq_a_supprimer.add(val_cpt_c1_c2_s1["cliques_contratables"][0]);
+                    ens_cliq_a_supprimer.add(val_cpt_c1_c2_s1["cliques_contratables"][1]);
+                    ens_cliq_a_supprimer.add(val_cpt_vois_depend["voisine"]);
+                    ens_cliq_a_supprimer.add(val_cpt_vois_depend["dependante"]);
+                    for cliq in [item for subitem in [val_cpt_c1_c2_s1["cliques_suppl_contractables"], 
+                                 val_cpt_vois_depend["cliques_suppl_contractables"]] \
+                                 for item in subitem]:
+                        ens_cliq_a_supprimer.add(cliq);
+                    C_new.difference_update(ens_cliq_a_supprimer);
+                    
+                    C_new.add( p1 );
+                    C_new.add( p2 );
+                    print("C_new={}".format(C_new))
+                    dico_sommets_corriges = dict();
+                    dico_sommets_non_corriges = dict();
+                    dico_sommets_par_cliqs_new = dict();
+                    C_new, aretes_Ec,\
+                    dico_sommets_corriges, \
+                    dico_sommets_non_corriges, \
+                    dico_sommets_par_cliqs_new = \
+                        mise_a_jour_aretes_cliques(C_new.copy(), aretes_Ec_new.copy(), 
+                                            aretes_ps,\
+                                            sommets_a_corriger.copy(), \
+                                            args["dico_sommets_par_cliqs"].copy())
+                    ##
+    #                print("!!!!C_new={},\n".format(C_new)+ 
+    #                      "dico_sommets_corriges={}, \n".format(dico_sommets_corriges)+
+    #                      "dico_sommets_non_corriges={}, \n".format(dico_sommets_non_corriges)+
+    #                      "dico_sommets_par_cliqs_new={},\n".format(dico_sommets_par_cliqs_new)+
+    #                      " aretes_ps={}".format(aretes_ps))
+                    ##
+                    dico_p1_p2_ps[cpt_prod_cartesien] = {
+                        "id_sommet_1": id_sommet_z,
+                        "sommet_1": sommet_z,
+                        "p1": val_cpt_c1_c2_s1["clique_possible"],
+                        "p2": val_cpt_vois_depend["voisine"].union(
+                                val_cpt_vois_depend["dependante"].union(
+                                frozenset({sommet_z}))),
+                        "ps": ps,
+                        "voisine": val_cpt_vois_depend["voisine"],
+                        "dependante": val_cpt_vois_depend["dependante"],
+                        "contractable1": val_cpt_c1_c2_s1["cliques_contratables"][0],
+                        "contractable2": val_cpt_c1_c2_s1["cliques_contratables"][1],
+                        "S1": val_cpt_c1_c2_s1["S1"],
+                        "S_z": s_z,
+                        "aretes_ajoutees_p1": aretes_ajoutees_p1,
+                        "aretes_ajoutees_p2": aretes_ajoutees_p2,
+                        "aretes_supprimees_ps": aretes_ps,
+                        "aretes_Ec_new": aretes_Ec_new,
+                        "C_new": C_new,
+                        "sommets_corriges": dico_sommets_corriges,
+                        "sommets_non_corriges": dico_sommets_non_corriges,
+                        "dico_sommets_par_cliqs_new": dico_sommets_par_cliqs_new
+                        }
+                if cpt_prod_cartesien >= nbre_elts_pi1_pi2:
+                    break;
             if cpt_prod_cartesien >= nbre_elts_pi1_pi2:
                 break;
-        if cpt_prod_cartesien >= nbre_elts_pi1_pi2:
-            break;
 #    print("@@@cpt_prod_cartesien={}, dico_C1_C2_S1={}, dico_cliques_augmentante={}".\
 #          format(cpt_prod_cartesien, len(dico_C1_C2_S1), len(dico_cliques_augmentante)))   
+    logger.debug(" * compression_sommet : *** fin compression_sommet, "+\
+                 " dico_p1_p2_ps:{}, ".format(len(dico_p1_p2_ps)))
     return dico_p1_p2_ps;
          
 ################### fonctions de bases pour la correction ==> fin   ###########
 
 ################### critere selection  compression ==> debut ##################
-def critere_C2_C1(dico_compression, args) :
-    """ selectionner le dico selon C2 puis C1
+def rechercher_min_max(liste_tuples, critere):
+    """ retourne la tuple (min, max)
+    """
+    min_c1 = np.inf;
+    #max_c2 = 0;
+    if critere == "C1":
+        return min(liste_tuples)
+    elif critere == "C2":
+        return max(liste_tuples)
+    elif critere == "C2_C1":
+        liste_intermediaires = [];
+        min_c1 = min(liste_tuples)[0]
+        for tuple_ in liste_tuples:
+           if tuple_[0] == min_c1:
+               liste_intermediaires.append(tuple_)
+        return max(liste_intermediaires)
+        
     
-    C2 : la maximum de sommets corriges
+def critere_C2_C1_local(dico_compression, args) :
+    """ selectionner le dico selon C2 puis C1 parmi les compressions possibles 
+        sommet a corriger (sommet a -1)
+    
+    C2 : le maximum de sommets corriges
+        * choisir le sommet a -1 qui corrige le max de sommets a -1 possibles
     C1 : le minimum d'aretes corriges
     
     dico_compression : dictionnaire contenant les compression (p1,p2,ps) du 
@@ -438,8 +642,21 @@ def critere_C2_C1(dico_compression, args) :
     dico_c1_c2 = dict();
     
     # definition de C2
+#    if args["critere_selection_compression"] == "voisins_corriges":             # C2
+#        for id_sommet_sommet_z, solutions in dico_compression.items():
+#            for cpt_prod_cartesien, dico_p1_p2_ps in solutions.items():
+#                if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
+#                    max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
+#                    min_c1 = max_c2;
+#                    if min_c1 not in dico_c1_c2:
+#                        dico_c1_c2[min_c1] = [dico_p1_p2_ps];
+#                    else:
+#                        dico_c1_c2[min_c1].append(dico_p1_p2_ps);
+# faux => suppose que chaque sommet a une seule solution PAS CORRECTE A EFFACER
+    # definition de C2
     if args["critere_selection_compression"] == "voisins_corriges":             # C2
-        for id_sommet_sommet_z, dico_p1_p2_ps in dico_compression.items():
+        for cpt_prod_cartesien, dico_p1_p2_ps in dico_compression.items():
+            print("dico_p1_p2_ps={}".format(len(dico_p1_p2_ps)))
             if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
                 max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
                 min_c1 = max_c2;
@@ -449,7 +666,7 @@ def critere_C2_C1(dico_compression, args) :
                     dico_c1_c2[min_c1].append(dico_p1_p2_ps);
     # definition de C1
     elif args["critere_selection_compression"] == "nombre_aretes_corrigees":     # C1
-        for id_sommet_sommet_z, dico_p1_p2_ps in dico_compression.items():
+        for cpt_prod_cartesien, dico_p1_p2_ps in dico_compression.items():
             nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoutees_p1"]) + \
                                     len(dico_p1_p2_ps["aretes_ajoutees_p2"]) + \
                                     len(dico_p1_p2_ps["aretes_supprimees_ps"]);
@@ -463,7 +680,7 @@ def critere_C2_C1(dico_compression, args) :
         pass
     # definition de C2 puis de C1
     elif args["critere_selection_compression"] == "voisins_nombre_aretes_corrigees": # C2_C1
-        for id_sommet_sommet_z, dico_p1_p2_ps in dico_compression.items():
+        for cpt_prod_cartesien, dico_p1_p2_ps in dico_compression.items():
             if len(dico_p1_p2_ps["sommets_corriges"]) >= max_c2 :
                 max_c2 = len(dico_p1_p2_ps["sommets_corriges"]);
                 nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoutees_p1"]) + \
@@ -480,6 +697,94 @@ def critere_C2_C1(dico_compression, args) :
         return min_c1, max_c2, dico_c1_c2;
     else:
         return min_c1, max_c2, dico_c1_c2[min_c1];
+        
+def critere_C2_C1_global(dico_compression, args) :
+    """ recherche la compression optimale parmi tous les sommets a corriger 
+        selon les criteres C1 et C2.
+        
+    C2 : le maximum de sommets corriges
+        * choisir le sommet a -1 qui corrige le max de sommets a -1 possibles
+    C1 : le minimum d'aretes corriges    
+    """
+    
+    max_c2_global = 0;
+    min_c1_global = np.inf;
+    dico_c1_c2 = dict();
+    
+    # selection C2
+    # je cherche le min local de c1 pour tous les sommets a corriger
+    # parmi les min locaux, je cherche le max global de c2
+    # une fois la liste des (min_global,max_global), je prends le 1er element.
+    if args["critere_selection_compression"] == "voisins_corriges":             # C2
+        for id_sommet_z, dicos_p1_p2_ps in dico_compression.items():
+            # selection de dico selon C1
+            min_c1_local = np.inf;
+            max_c2_local = dicos_p1_p2_ps[1]
+            for dico_p1_p2_ps in dicos_p1_p2_ps[2] :
+                nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoutees_p1"]) + \
+                                        len(dico_p1_p2_ps["aretes_ajoutees_p2"]) + \
+                                        len(dico_p1_p2_ps["aretes_supprimees_ps"]);
+                print("@@ min={}, nbre_aretes_corriges={}".format(min_c1_local, 
+                      nbre_aretes_corriges))
+                min_c1_local = nbre_aretes_corriges \
+                                if min_c1_local >= nbre_aretes_corriges \
+                                else min_c1_local;
+                if (min_c1_local,max_c2_local) not in dico_c1_c2:
+                    dico_c1_c2[(min_c1_local, max_c2_local)] = [dico_p1_p2_ps];
+                else:
+                    dico_c1_c2[(min_c1_local, max_c2_local)].append(dico_p1_p2_ps);
+        # selection selon C2
+        cle_min_max_c2 = rechercher_min_max(dico_c1_c2.keys(), "C2");
+        min_c1_global = cle_min_max_c2[0];
+        max_c2_global = cle_min_max_c2[1]
+        print("")
+        return min_c1_global, max_c2_global, dico_c1_c2[cle_min_max_c2][0];
+    
+    elif args["critere_selection_compression"] == "nombre_aretes_corrigees":     # C1
+        for id_sommet_z, dicos_p1_p2_ps in dico_compression.items():
+            # selection de dico selon C2
+            max_c2_local = 0;
+            min_c1_local = dicos_p1_p2_ps[0]
+            for dico_p1_p2_ps in dicos_p1_p2_ps[2] :
+                nbre_sommets_corriges = len(dico_p1_p2_ps["sommets_corriges"]);
+                max_c2_local = nbre_sommets_corriges \
+                                if nbre_sommets_corriges > max_c2_local \
+                                else max_c2_local;
+                if (min_c1_local,max_c2_local) not in dico_c1_c2:
+                    dico_c1_c2[(min_c1_local, max_c2_local)] = [dico_p1_p2_ps];
+                else:
+                    dico_c1_c2[(min_c1_local, max_c2_local)].append(dico_p1_p2_ps);
+        # selection selon C1
+        cle_min_max_c2 = rechercher_min_max(dico_c1_c2.keys(), "C1");
+        min_c1_global = cle_min_max_c2[0];
+        max_c2_global = cle_min_max_c2[1]
+        return min_c1_global, max_c2_global, dico_c1_c2[cle_min_max_c2][0];
+        
+    elif args["critere_selection_compression"] == "voisins_nombre_aretes_corrigees": # C2_C1
+        for id_sommet_z, dicos_p1_p2_ps in dico_compression.items():
+            min_c1_local = np.inf
+            max_c2_local = 0
+            for dico_p1_p2_ps in dicos_p1_p2_ps[2] :
+                nbre_sommets_corriges = len(dico_p1_p2_ps["sommets_corriges"]);
+                max_c2_local = nbre_sommets_corriges \
+                                if nbre_sommets_corriges > max_c2_local \
+                                else max_c2_local;
+                nbre_aretes_corriges = len(dico_p1_p2_ps["aretes_ajoutees_p1"]) + \
+                                        len(dico_p1_p2_ps["aretes_ajoutees_p2"]) + \
+                                        len(dico_p1_p2_ps["aretes_supprimees_ps"]);
+                min_c1_local = nbre_aretes_corriges \
+                                if min_c1_local >= nbre_aretes_corriges \
+                                else min_c1_local;
+                if (min_c1_local,max_c2_local) not in dico_c1_c2:
+                    dico_c1_c2[(min_c1_local, max_c2_local)] = [dico_p1_p2_ps];
+                else:
+                    dico_c1_c2[(min_c1_local, max_c2_local)].append(dico_p1_p2_ps);
+                
+        # selection selon C2_C1
+        cle_min_max_c2 = rechercher_min_max(dico_c1_c2.keys(), "C2_C1");
+        min_c1_global = cle_min_max_c2[0];
+        max_c2_global = cle_min_max_c2[1]
+        return min_c1_global, max_c2_global, dico_c1_c2[cle_min_max_c2][0];
 ################### critere selection  compression ==> fin ##################
 
 ################### application de la compression ==> debut ##################
@@ -525,14 +830,25 @@ def correction_graphe_correlation(args):
             for id_sommet_1, sommet_1 in enumerate(sommets_a_corriger):
                 cliques_sommet_1 = cliques_sommet(sommet_1, 
                                             args["dico_sommets_par_cliqs"]);
-                print("XX cliques_sommet_1={}".format(cliques_sommet_1))
-                dico_compression[(id_sommet_1,sommet_1)] = compression_sommet(
-                                                             id_sommet_1,
-                                                             sommet_1,
-                                                             sommets_a_corriger,
-                                                             cliques_sommet_1.copy(),
-                                                            args);
-                                 
+                logger.debug(" * sommet_1:{}".format(sommet_1) +\
+                        ", cliques_sommets_1:{}".format(len(cliques_sommet_1)))
+                #print("XX cliques_sommet_1={}".format(cliques_sommet_1))
+#                dico_compression[(id_sommet_1,sommet_1)] = compression_sommet(
+#                                                             id_sommet_1,
+#                                                             sommet_1,
+#                                                             sommets_a_corriger,
+#                                                             cliques_sommet_1.copy(),
+#                                                            args);
+                dico_p1_p2_ps = dict();
+                dico_p1_p2_ps = compression_sommet(id_sommet_1,
+                                                     sommet_1,
+                                                     sommets_a_corriger,
+                                                     cliques_sommet_1.copy(),
+                                                    args);
+                
+                dico_compression[(id_sommet_1,sommet_1)] = critere_C2_C1_local(
+                                                            dico_p1_p2_ps,
+                                                            args)
             # dico_sol_C2_C1 = {
             #        "id_sommet_1":,"sommet_1":,"p1":,"p2":,"ps":,
             #        "voisine":,"dependante":,
@@ -543,14 +859,39 @@ def correction_graphe_correlation(args):
             #        "sommets_corriges":,"sommets_non_corriges":,
             #        "dico_sommets_par_cliqs_new": 
             #        }
+            
+#            print("\n dico_compr={}".format(dico_compression))
             dico_sol_C2_C1 = dict();
             min_c1 = 0; max_c2 = 0;
-            min_c1, max_c2, dico_sol_C2_C1 = critere_C2_C1(dico_compression,
-                                                           args)                # C2 : nombre maximum de voisins corriges par un sommet, C1 : nombre minimum d'aretes a corriger au voisinage d'un sommet  
+            min_c1, max_c2, dico_sol_C2_C1 = critere_C2_C1_global(
+                                            dico_compression,
+                                            args)                               # C2 : nombre maximum de voisins corriges par un sommet, C1 : nombre minimum d'aretes a corriger au voisinage d'un sommet  
+            
+            logger.debug(" * correction_graphe : sommet_1:{}".format(sommet_1))
+            logger.debug(" *** min_c1:{}".format(min_c1))
+            logger.debug(" *** max_c2:{}".format(max_c2))
+            logger.debug(" *** dico_sol_C2_C1:{}".format( len(dico_sol_C2_C1)))
+            logger.debug(" *** C_old:{}, aretes_Ec_old:{}".format( len(args["C"]),
+                         len(args["aretes_Ec"])))
+            
             C, aretes_Ec, sommets_a_corriger = appliquer_correction(
                                                 dico_sol_C2_C1,
                                                 sommets_a_corriger,
                                                 args)
+            
+            logger.debug(" *** C:{}, aretes_Ec:{}".format( len(C), 
+                         len(aretes_Ec)))
+            logger.debug(" *** p1:{}, p2:{}, ps:{}".format(dico_sol_C2_C1["p1"],
+                         dico_sol_C2_C1["p2"], 
+                         dico_sol_C2_C1["aretes_supprimees_ps"]))
+            logger.debug(" *** sommet_corriges:{}, sommets_a_corriger={}".format(
+                         dico_sol_C2_C1["sommets_corriges"],
+                         sommets_a_corriger))
+            for sommet, cliques in dico_sol_C2_C1[
+                                    "dico_sommets_par_cliqs_new"].items():
+                logger.debug(" *** sommet_par_cliques {}={}".format(
+                             sommet, cliques));
+            
             args["C"] = C;
             args["aretes_cliques"] = fct_aux.aretes_dans_cliques(C);
             args["aretes_Ec"] = aretes_Ec;
@@ -690,7 +1031,7 @@ if __name__ == '__main__':
     test_compression_sommet = False#True #False;
     test_critere_C2_C1 = False#True#False;
     test_mise_a_jour_cliques = False;                                           # pas defini
-    test_appliquer_correction = True#False;                                    
+    test_appliquer_correction = False #True#False;                                    
     
     
     if test_cliques_sommet :
