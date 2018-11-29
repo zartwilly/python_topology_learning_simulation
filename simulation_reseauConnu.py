@@ -67,11 +67,12 @@ def is_locked(filepath, df, G_k):
         # Opening file in append mode and read the first 8 characters.
         file_object = open(filepath, 'a', buffer_size)
         if file_object:
-            df_resExec = pd.read_csv(filepath, sep = ",", index_col=0).\
-                            reset_index();
+            df_resExec = pd.read_csv(filepath, sep = ",");
+            print("open ")
             # merger df_resExec et df en gardant les index (fusionner leur index)
             df_resExec = pd.merge(df_resExec, df, on="index", how="outer");
             df_resExec.to_csv(filepath, sep=',', index=False);
+            print("sauve {}".format(G_k))
             locked = False;
     except IOError as message:
         print("resumeExecution_{}.csv is not locked ({}).".format( \
@@ -82,7 +83,7 @@ def is_locked(filepath, df, G_k):
             file_object.close();
             print("resumeExecution_{}.csv  closed.".format( \
                   G_k.split("_")[2]))
-    
+    print("locked={}".format(locked))
     return locked;
     
 def sauver_df_resume(df, name_save_df, G_k):
@@ -97,6 +98,7 @@ def sauver_df_resume(df, name_save_df, G_k):
     #   sinon enregistrer.
     my_file = Path(name_save_df);
     
+    print("sauver ")
     temps_attente = 0.010;                                                      # attente de 10 ms
     if my_file.is_file():
         while is_locked(name_save_df, df, G_k):
@@ -104,7 +106,9 @@ def sauver_df_resume(df, name_save_df, G_k):
                   format((G_k.split("_")[2], temps_attente)))
             time.sleep(temps_attente);
     else:
+        print("sauve :)")
         df.to_csv(name_save_df, sep=',', index=False);
+    print("sauver fin")
 ###############################################################################
 #               generation graphes de flots ---> debut
 ###############################################################################  
@@ -287,7 +291,7 @@ def get_truncated_normal(mean=0, sd=1, low=0, upp=10):
                      loc=mean, scale=sd)
     
 def loi_de_probalibilite(debut_proba, fin_proba, 
-                         nbre_correlations, correl_seuil):
+                         correl_seuil, nbre_correlations):
     """
     generer des valeurs de correlations entre debut_proba et fin_proba.
     """
@@ -324,7 +328,7 @@ def ajouter_probabilite(dico_proba_cases, cases, loi_proba,
                 dico_proba_cases[case] = loi_de_probalibilite(
                                                 debut_proba, 
                                                 fin_proba,
-                                                val_limite_proba_1,
+                                                correl_seuil=val_limite_proba_1,
                                                 nbre_correlations = 250);
         elif case_a_selectionner == "1_0":
             for case in cases:
@@ -341,7 +345,7 @@ def ajouter_probabilite(dico_proba_cases, cases, loi_proba,
                 dico_proba_cases[case] = loi_de_probalibilite(
                                                 debut_proba, 
                                                 fin_proba,
-                                                val_limite_proba_1,
+                                                correl_seuil=val_limite_proba_1,
                                                 nbre_correlations = 250);
     elif loi_proba == "gaussienne":
         if case_a_selectionner == "0_0":
@@ -351,7 +355,7 @@ def ajouter_probabilite(dico_proba_cases, cases, loi_proba,
                 dico_proba_cases[case] = loi_de_probalibilite(
                                                 debut_proba, 
                                                 fin_proba,
-                                                val_limite_proba_1,
+                                                correl_seuil=val_limite_proba_1,
                                                 nbre_correlations = 250);
         elif case_a_selectionner == "1_1":
             for case in cases:
@@ -360,7 +364,7 @@ def ajouter_probabilite(dico_proba_cases, cases, loi_proba,
                 dico_proba_cases[case] = loi_de_probalibilite(
                                                 debut_proba, 
                                                 fin_proba,
-                                                val_limite_proba_1,
+                                                correl_seuil=val_limite_proba_1,
                                                 nbre_correlations = 250);
         elif case_a_selectionner == "1_0":
             for case in cases:
@@ -369,7 +373,7 @@ def ajouter_probabilite(dico_proba_cases, cases, loi_proba,
                 dico_proba_cases[case] = loi_de_probalibilite(
                                                 debut_proba, 
                                                 fin_proba,
-                                                val_limite_proba_1,
+                                                correl_seuil=val_limite_proba_1,
                                                 nbre_correlations = 250);
         
         elif case_a_selectionner == "0_1":
@@ -379,7 +383,7 @@ def ajouter_probabilite(dico_proba_cases, cases, loi_proba,
                 dico_proba_cases[case] = loi_de_probalibilite(
                                                 debut_proba, 
                                                 fin_proba,
-                                                val_limite_proba_1,
+                                                correl_seuil=val_limite_proba_1,
                                                 nbre_correlations = 250);
     return dico_proba_cases;
 ###############################################################################
@@ -622,13 +626,13 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         filemode="w")
     logger = logging.getLogger('simulation_parallele_graphes_generes');
     
-    logger.debug("#### debut simulation_parallele")  
+    logger.debug("\n \n \t \t \t \t #### debut simulation_parallele")  
     
     path_distribution = args["dir_base"]+ \
                         args["critere_selection_compression"]+ "/" + \
                         args["mode_correction"]+ "/" + \
                         "data_p_"+str(args["p_correl"]) + \
-                        "/distribution";                                        # repertoire des distribution cree
+                        "/distribution"+"/";                                        # repertoire des distribution cree
     path_distr = Path(path_distribution);    
     if not path_distr.is_dir() :
         path_distr.mkdir(parents=True, exist_ok=True)
@@ -642,7 +646,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         args["mode_correction"]+ "/" + \
                         "data_p_"+str(args["p_correl"]) + "/" + \
                         G_k + "/" + \
-                        "chemin_datasets";                                # creation repertoire chemin_datasets
+                        "chemin_datasets"+"/";                                # creation repertoire chemin_datasets
     path_datasets = Path(chemin_datasets);
     if not path_datasets.is_dir():
         path_datasets.mkdir(parents=True, exist_ok=True)
@@ -652,7 +656,7 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                         args["mode_correction"]+ "/" + \
                         "data_p_"+str(args["p_correl"]) + "/" + \
                         G_k + "/" + \
-                        "chemin_matrices";                                # creation repertoire chemin_matrices
+                        "chemin_matrices"+"/";                                # creation repertoire chemin_matrices
     path_matrices = Path(chemin_matrices);
     if not path_matrices.is_dir():
         path_matrices.mkdir(parents=True, exist_ok=True)
@@ -665,17 +669,21 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
     sum_correction = 0; sum_hamming = 0; 
     correl_dc_dh = 0;
     for alpha_ in range(alpha):
+        df_dico = dict();
         try :
             print("G_k={}, k={}, alpha={}".format(G_k,k,alpha))
             matE_k_alpha = None;
             dico_k_erreurs = {"aretes_ajoutees":[], "aretes_supprimees":[]};
             dico_proba_cases = dict();
+            print("loiProba={}, val_limite_proba_1={}".format(
+                  args["loi_proba"], args["val_limite_proba_1"]))
             matE_k_alpha, dico_k_erreurs, dico_proba_cases = \
                     modifier_k_cases(matE, 
                                      args["p_correl"], 
-                                     args["k"], 
+                                     k, 
                                      args["loi_proba"], 
                                      args["val_limite_proba_1"])
+            
             matE_k_alpha.to_csv(chemin_matrices +
                                 "matE_" +
                                 str(k) + "_" +
@@ -705,7 +713,8 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             logger.debug("aretes_Ec={}".format(len(aretes_Ec)));
             logger.debug("C={}".format(len(C))); 
             logger.debug("sommets_par_cliques={}".format(dico_sommets_par_cliqs));
-            sommets_1 = {sommet for sommet, etat in dico_cliq if dico_cliq[sommet]==-1}
+            sommets_1 = {sommet for sommet, etat in dico_cliq.items() 
+                                    if dico_cliq[sommet]==-1}
             logger.debug("sommets_1={}".format(sommets_1))
             
             ### correction
@@ -723,35 +732,50 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                 args["aretes_cliques"] = fct_aux.aretes_dans_cliques(C);
                 args_res, dico_solution = \
                         algoCorrection.correction_graphe_correlation(args);
+                logger.debug("***** Fin Algorithme de correction ")
             else:
                 logger.debug("***** Pas de Correction *****")
             
+            C_new = C.copy();
             cliques_identiques_C_C_old = list();   
             cliques_differentes_C_C_old = list();
-            dc = list();
-            dh = list();
+            dc = 0; aretes_diff_dc = list();
+            dh = 0; aretes_diff_dh = list();
+            print("1")
             if args_res:
+                C_new = args_res["C"]; 
+                print("11")
                 dc, aretes_diff_dc = distance_hamming(
-                            set(fct_aux.liste_arcs(matE_k_alpha.columns.tolist())), 
+                            set(fct_aux.liste_arcs(matE_k_alpha)), 
                             args_res["aretes_Ec"])
+                print("12")
                 dh, aretes_diff_dh = distance_hamming(set(aretes_init_matE),
                                                       args_res["aretes_Ec"])
+                print("13")
                 sum_correction += dc;
+                print("14")
                 sum_hamming += dh;
+                print("15")
                 cliques_identiques_C_C_old, cliques_differentes_C_C_old = \
                     comparer_cliques(args_res["C"], C.copy())                  # C.copy() = C_old
-                dico_sommets_par_cliqs_new = args_res["dico_sommets_par_cliqs_new"]
-            df_dico = dict();
-            df_dico["G_k"] = G_k; df_dico["k"] = k; df_dico["alpha"] = alpha;
+                dico_sommets_par_cliqs_new = args_res["dico_sommets_par_cliqs"]
+            #df_dico = dict();
+            print("2")
+            df_dico["G_k"] = G_k; 
+            df_dico["k"] = k; 
+            df_dico["alpha"] = alpha;
             df_dico["nbre_sommets_matE"] = nbre_sommets_matE;
             df_dico["aretes_init_matE"] = aretes_init_matE; 
             df_dico["aretes_ajoutees"] = dico_k_erreurs["aretes_ajoutees"]; 
             df_dico["aretes_supprimees"] = dico_k_erreurs["aretes_supprimees"]; 
             df_dico["dc"] = dc; df_dico["dh"] = dh; 
+            df_dico["aretes_diff_dc"] = aretes_diff_dc; 
+            df_dico["aretes_diff_dh"] = aretes_diff_dh;
             df_dico["C_old"] = len(C_old); 
-            df_dico["C"] = len(args["C"]);
+            df_dico["C"] = len(C_new);
             df_dico["cliques_identiques_C_C_old"] = len(cliques_identiques_C_C_old);
             df_dico["cliques_differentes_C_C_old"] = len(cliques_differentes_C_C_old); 
+            print("3")
             #df_dico[""] = ; df_dico[""] = ;
             for cpt_sommet, value in dico_solution.items():
                 df_dico["etape_"+str(cpt_sommet[0])+"_sommet_1"] = \
@@ -773,32 +797,22 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
                 df_dico["etape_"+str(cpt_sommet[0])+"_aretes_p2"] = \
                                 list(it.combinations(value["compression_p2"],2))
                                     
-                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_supprimes"] = \
-                                    value["cout_T"]["aretes_supprimes"]
+                df_dico["etape_"+str(cpt_sommet[0])+"_aretes_supprimees"] = \
+                                    value["cout_T"]["aretes_supprimees"]
                 df_dico["etape_"+str(cpt_sommet[0])+"_nbre_aretes_supprimes"] = \
-                                    len(value["cout_T"]["aretes_supprimes"])
+                                    len(value["cout_T"]["aretes_supprimees"])
                                     
                 df_dico["etape_"+str(cpt_sommet[0])+"_min_c1"] = \
                                     value["cout_T"]["min_c1"]
                 df_dico["etape_"+str(cpt_sommet[0])+"_min_c2"] = \
                                     value["cout_T"]["min_c2"]
             # mettre un for pour dico_sommets_par_cliqs_new
+            print("4")
             for sommet, cliques in dico_sommets_par_cliqs_new.items():
                 df_dico[str(sommet)] = len(cliques);
-            # convertir df_dico en dataframe
-            df = pd.DataFrame.from_dict(df_dico, orient="index");
-            df.columns = [G_k];
-            # save dataframe
-            name_save_df = args["dir_base"]+ \
-                            args["critere_selection_compression"]+ "/" + \
-                            args["mode_correction"]+ "/" + \
-                            "data_p_"+str(args["p_correl"]) + \
-                            "/distribution" + "/" + \
-                            "resumeExecution_"+ \
-                            str(k) + \
-                            ".csv";
-            sauver_df_resume(df, name_save_df, G_k);   
+            print("5")
         except Exception as e:
+            print("e={}".format(e))
             df_dico["G_k"] = G_k; df_dico["k"] = k; df_dico["alpha"] = alpha;
             df_dico["nbre_sommets_matE"] = nbre_sommets_matE;
             df_dico["aretes_init_matE"] = aretes_init_matE; 
@@ -810,9 +824,29 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             df_dico["C"] = "error";
             df_dico["cliques_identiques_C_C_old"] = "error";
             df_dico["cliques_differentes_C_C_old"] = "error";
+        # convertir df_dico en dataframe
+        print("6")
+        df = pd.DataFrame.from_dict(df_dico, orient="index");
+        print("61")
+        df.columns = [G_k];
+        df["index"] = df.index;
+        # save dataframe
+        print("7")
+        name_save_df = args["dir_base"]+ \
+                        args["critere_selection_compression"]+ "/" + \
+                        args["mode_correction"]+ "/" + \
+                        "data_p_"+str(args["p_correl"]) + \
+                        "/distribution" + "/" + \
+                        "resumeExecution_"+ \
+                        str(k) + \
+                        ".csv";
+        sauver_df_resume(df, name_save_df, G_k); 
+        print("8")
     # moyenner dist_line et hamming pour k aretes supprimes
-    moy_correction = sum_correction / alpha_max;
-    moy_hamming = sum_hamming / alpha_max;
+    moy_correction = sum_correction / alpha;
+    moy_hamming = sum_hamming / alpha;
+    print("9 moy_correction={},moy_hamming={}".format(moy_correction,
+          moy_hamming))
     if moy_hamming == 0 and moy_correction == 0:
         correl_dc_dh = 1
     else:
@@ -828,9 +862,9 @@ def simulation_parallele(mat, matE, k, alpha, dico_arcs_sommets,
             str(k) + ";" + \
             str(moy_correction) + ";" + \
             str(moy_hamming) + ";" + \
-            str(aretes_init_matE) + ";" + \
+            str(len(aretes_init_matE)) + ";" + \
             str(correl_dc_dh) + "\n")
-    f.close();        
+    f.close();    
 
 
 ###############################################################################
