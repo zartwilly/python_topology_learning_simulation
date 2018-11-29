@@ -45,8 +45,9 @@ def mise_a_jour_aretes_cliques(C_new, aretes_Ec, aretes_ps,
                 aretes_Ec.difference_update(set(temp_aretes));             
                 break;
 #    print("PS cpt_C_new={},cpt_C_nouvelle={}".format(len(C_new), len(C_nouvelle)))
-    
-    dico_sommets_par_cliqs_new = fct_aux.couverture_par_sommets(C_nouvelle);
+    sommets_matE = dico_sommets_par_cliqs.keys(); 
+    dico_sommets_par_cliqs_new = fct_aux.couverture_par_sommets(sommets_matE,
+                                                                C_nouvelle);
     dico_sommets_corriges = dict(); dico_sommets_non_corriges = dict();
     
     for id_sommet, sommet_a_corriger in enumerate(sommets_a_corriger):
@@ -1001,7 +1002,8 @@ if __name__ == '__main__':
     matE_k_alpha.fillna(value=0, inplace=True);
     
     aretes_Ec = fct_aux.liste_arcs(matE_k_alpha);
-    dico_sommets_par_cliqs = fct_aux.couverture_par_sommets(C);
+    sommets = dico_cliq.keys();
+    dico_sommets_par_cliqs = fct_aux.couverture_par_sommets(sommets, C);
     dico_gamma_sommets = fct_aux.gamma_noeud(matE_k_alpha, aretes_Ec)
     
     sommet_z = "z";
