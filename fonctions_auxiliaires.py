@@ -116,7 +116,7 @@ def liste_arcs(mat):
             res.append((row, col))
     return res;
 
-def couverture_par_sommets(C):
+def couverture_par_sommets(sommets_matE, C):
     """ retourne les cliques couvrants tous les sommets d'un graphe. """ 
     dico_sommets_par_cliqs = dict();
     for cliq in C:
@@ -125,6 +125,9 @@ def couverture_par_sommets(C):
                 dico_sommets_par_cliqs[sommet] = [cliq];
             else:
                 dico_sommets_par_cliqs[sommet].append(cliq);
+    sommets_not_in_cliq = set(sommets_matE) - set(dico_sommets_par_cliqs.keys())
+    for sommet in sommets_not_in_cliq:
+        dico_sommets_par_cliqs[sommet] = [];
     return dico_sommets_par_cliqs;
 
 def rechercher_sommet(sommets_matE, sommet_pat1, sommet_pat2):
