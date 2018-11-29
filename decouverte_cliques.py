@@ -788,7 +788,8 @@ def couverture_en_cliques(dico_cliq, dico_gamma_noeud, liste_aretes_Ec, matE,
     ### while fin
     
     ## determiner couverture par sommets
-    dico_sommets_par_cliqs = fct_aux.couverture_par_sommets(C)
+    sommets = dico_cliq.keys();
+    dico_sommets_par_cliqs = fct_aux.couverture_par_sommets(sommets, C)
             
     logger.debug("ordre noeuds traites:{}".format(ordre_noeuds_traites))
     return C, dico_cliq, liste_aretes_Ec, ordre_noeuds_traites, \
